@@ -180,7 +180,8 @@ for (i in 61:80){
 }
 comp_timefinal1c <- proc.time() - comp_time1c
 
-# write_xlsx(as.data.frame(sim1_full), path = "C:/Users/gbean/Documents/simulation1_joint.xlsx")
+write_xlsx(as.data.frame(sim1_full), path = "/Users/rhode22g/Documents/sim1full.xlsx")
+write_xlsx(as.data.frame(simulation_results1), path = "/Users/rhode22g/Documents/sim1results.xlsx")
 ```
 
 The computation time was
