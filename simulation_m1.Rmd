@@ -89,7 +89,7 @@ for (i in 1:dim(ancestor_sim1)[1]){
 # CHUNK 1 OF 5
 comp_time1 <- proc.time()
 # 100 REPLICATIONS
-for (i in 1:20){
+for (i in 1:100){
   # find descendant sample using index as the seed
   descend_sample <- descendent_sample(L=20, q=0.005, n=100, seed = i, hapmap = hapmap_binary)
   
@@ -180,7 +180,7 @@ for (i in 61:80){
 }
 comp_timefinal1c <- proc.time() - comp_time1c
 
-write_xlsx(as.data.frame(sim1_full), path = "C:/Users/gbean/Documents/simulation1_joint.xlsx")
+# write_xlsx(as.data.frame(sim1_full), path = "C:/Users/gbean/Documents/simulation1_joint.xlsx")
 ```
 
 The computation time was

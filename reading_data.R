@@ -1,6 +1,7 @@
 # date created: 06-25-2021
 # edited: 06-28-2021
 # edited: 07-19-2021
+# edited: 09-27-2021 (file paths for different machine replaced in chunk for reading in the data from HapMap repository)
 
 #This script uses population YRI for chromosome 1. See mccl_documentation.Rmd for full documentation
 
@@ -13,11 +14,11 @@ library(dplyr)
 #######################
 # reading in the data:
 ## unrelated
-yri_unr_1 <- read.csv2(file = "C:/Users/gbean/Documents/MCCL REU files/hapmap3_r2_b36_fwd.consensus.qc.poly.chr1_yri.unr.phased.gz", header = TRUE, sep = "")
+yri_unr_1 <- read.csv2(file = "/Users/rhode22g/Documents/stat-395/stat395-MCCL/hapmap3_r2_b36_fwd.consensus.qc.poly.chr1_yri.unr.phased.gz", header = TRUE, sep = "")
 ## trios
-yri_trio_1 <- read.csv2(file = "C:/Users/gbean/Documents/MCCL REU files/hapmap3_r2_b36_fwd.consensus.qc.poly.chr1_yri.phased.gz", header = TRUE, sep = "")
+yri_trio_1 <- read.csv2(file = "/Users/rhode22g/Documents/stat-395/stat395-MCCL/hapmap3_r2_b36_fwd.consensus.qc.poly.chr1_yri.phased.gz", header = TRUE, sep = "")
 ## duos
-yri_duo_1 <- read.csv2(file = "C:/Users/gbean/Documents/MCCL REU files/hapmap3_r2_b36_fwd.consensus.qc.poly.chr1_yri.D.phased.gz", header = TRUE, sep = "")
+yri_duo_1 <- read.csv2(file = "/Users/rhode22g/Documents/stat-395/stat395-MCCL/hapmap3_r2_b36_fwd.consensus.qc.poly.chr1_yri.D.phased.gz", header = TRUE, sep = "")
 #######################
 
 #######################
