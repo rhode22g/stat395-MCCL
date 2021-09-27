@@ -1,0 +1,692 @@
+---
+title: 'Simulations: Fourwise'
+author: "Grace Rhodes"
+date: "8/3/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load packages and files:
+```{r}
+# LIBRARY FUNCTION CALLS
+library(ggplot2)
+library(sfsmisc)
+
+# SOURCE FUNCTION CALLS
+source("reading_data.R")
+source("ancestor_L3_bitwise.R")
+source("ancestor_general.R")
+source("descendant_sequences.R")
+source("onewise_marginal.R")
+source("pairwise_marginal.R")
+source("threewise_marginal.R")
+source("fourwise_marginal.R")
+```
+
+
+For this simulation, we hold the sequence length fixed at $L=20,$ the number of descendants fixed at $n=100,$ and the number of replications fixed at $N=100.$
+
+We will be using 4 values for the recombination probability: $q=0.005, 0.01, 0.05, 0.10$
+
+We will be using 4 values for the Markov Chain order: $m=0,1,2,3$ *this file contains the simulations for m=3*
+
+The ancestor distribution for this simulation is based on the trios in YRI population on chromosome 1 with a sequence length of L=20
+
+```{r}
+ancestor_sim1 <- ancestor(L=20, hapmap_data = hapmap_binary)
+head(ancestor_sim1)
+```
+
+##SIMULATION5: L=20, n=100, q=0.005, m=3
+
+
+For this value of m, there are 17 fourwise sites to compare. Based on the reparameterization, all the parameters depend on the selected free parameters $\pi_{s,s+1, s+2, s+3}(0,0,0,0) = \phi_s(0,0)$, $\pi_{s,s+1,s+2, s+3}(0,0,1,0) = \phi_s(0,1)$ $\pi_{s,s+1, s+2, s+3}(0,1,0,0) = \phi_s(1,0)$, and $\pi_{s,s+1, s+2, s+3}(0,1,1,0) = \phi_s(1,1)$. We will calculate the bias and standard deviation for each of the free parameters. First, find the true parameter values.
+
+```{r}
+an_seq <- matrix(c(0:(2^(20)-1)), ncol=1)
+an_seq <- t( apply(an_seq,1,digitsBase, base=2, ndigits=20) ) 
+
+true_phi00 <- rep(NA, 17)
+for (j in 1:17){
+  to_sum <- rep(NA, 2^20)
+  for (h in 1:(2^20)){
+    if (an_seq[h, j] == 0 & an_seq[h, (j+1)]==0 & an_seq[h, (j+2)] ==0 & an_seq[h, (j+3)] ==0){
+      to_sum[h] <- ancestor_sim1[h]
+    }
+  }
+  true_phi00[j] <- sum(to_sum, na.rm = TRUE)
+}
+true_phi00
+```
+
+```{r}
+true_phi01 <- rep(NA, 17)
+for (j in 1:17){
+  to_sum <- rep(NA, 2^20)
+  for (h in 1:(2^20)){
+    if (an_seq[h, j] == 0 & an_seq[h, (j+1)]==0 & an_seq[h, (j+2)] ==1 & an_seq[h, (j+3)] ==0){
+      to_sum[h] <- ancestor_sim1[h]
+    }
+  }
+  true_phi01[j] <- sum(to_sum, na.rm = TRUE)
+}
+true_phi01
+```
+
+```{r}
+true_phi10 <- rep(NA, 17)
+for (j in 1:17){
+  to_sum <- rep(NA, 2^20)
+  for (h in 1:(2^20)){
+    if (an_seq[h, j] == 0 & an_seq[h, (j+1)]==1 & an_seq[h, (j+2)] ==0 & an_seq[h, (j+3)] ==0){
+      to_sum[h] <- ancestor_sim1[h]
+    }
+  }
+  true_phi10[j] <- sum(to_sum, na.rm = TRUE)
+}
+true_phi10
+```
+
+```{r}
+true_phi11 <- rep(NA, 17)
+for (j in 1:17){
+  to_sum <- rep(NA, 2^20)
+  for (h in 1:(2^20)){
+    if (an_seq[h, j] == 0 & an_seq[h, (j+1)]==1 & an_seq[h, (j+2)] ==1 & an_seq[h, (j+3)] ==0){
+      to_sum[h] <- ancestor_sim1[h]
+    }
+  }
+  true_phi11[j] <- sum(to_sum, na.rm = TRUE)
+}
+true_phi11
+```
+
+
+Then, obtain the pairwise estimates for each of the 100 replications.
+
+```{r}
+# initialize matrix to store bias and SD
+simulation_results9_phi00 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results9_phi00) <- paste("site_",seq(1:17),sep="")
+simulation_results9_phi01 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results9_phi01) <- paste("site_",seq(1:17),sep="")
+simulation_results9_phi10 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results9_phi10) <- paste("site_",seq(1:17),sep="")
+simulation_results9_phi11 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results9_phi11) <- paste("site_",seq(1:17),sep="")
+# sim9_full <- vector(length = 100)
+
+comp_time9 <- proc.time()
+# 100 REPLICATIONS
+for (i in 1:100){
+  # print("seed:")
+  # print(i)
+  # find descendant sample using index as the seed
+  descend_sample <- descendent_sample(L=20, q=0.005, n=100, seed = i, hapmap = hapmap_binary)
+
+  # find threewise estimates
+  threewise_estimates <- estimates_m2(L=20, q=0.005, n=100, descend = descend_sample)
+  
+  # find fourwise estimates
+  fourwise_estimates <- estimates_m3(L=20, q=0.005, n=100, d = descend_sample)
+  
+  # append estimate for this replication into the matrix
+  simulation_results9_phi00[i,] <- fourwise_estimates[1,]
+  simulation_results9_phi01[i,] <- fourwise_estimates[3,]
+  simulation_results9_phi10[i,] <- fourwise_estimates[5,]
+  simulation_results9_phi11[i,] <- fourwise_estimates[7,]
+  # sim9_full[i] <- prod(fourwise_estimates[1,]) / prod(threewise_estimates[1, 2:17])
+}
+comp_timefinal9 <- proc.time() - comp_time9
+```
+
+The computation time was
+
+```{r}
+comp_timefinal9[3]
+```
+
+Calculate the bias for each $\phi_s(0), \phi_s(1)$ for $s \in \{1,...,18\}$
+
+```{r}
+perf_measures_sim9 <- matrix(NA, nrow = 17, ncol = 12)
+for (k in 1:17){
+  perf_measures_sim9[k, 1] <- mean(simulation_results9_phi00[,k]) - true_phi00[k]
+  perf_measures_sim9[k, 2] <- sd(simulation_results9_phi00[,k])
+  perf_measures_sim9[k, 3] <- mean(simulation_results9_phi00[,k])
+  
+  perf_measures_sim9[k, 4] <- mean(simulation_results9_phi01[,k]) - true_phi01[k]
+  perf_measures_sim9[k, 5] <- sd(simulation_results9_phi01[,k])
+  perf_measures_sim9[k, 6] <- mean(simulation_results9_phi01[,k])
+  
+  perf_measures_sim9[k, 7] <- mean(simulation_results9_phi10[,k]) - true_phi10[k]
+  perf_measures_sim9[k, 8] <- sd(simulation_results9_phi10[,k])
+  perf_measures_sim9[k, 9] <- mean(simulation_results9_phi10[,k])
+  
+  perf_measures_sim9[k, 10] <- mean(simulation_results9_phi11[,k]) - true_phi11[k]
+  perf_measures_sim9[k, 11] <- sd(simulation_results9_phi11[,k])
+  perf_measures_sim9[k, 12] <- mean(simulation_results9_phi11[,k])
+}
+colnames(perf_measures_sim9) <- c("Bias00", "sd00", "Avg Est00", "Bias01", "sd01", "Avg Est01", "Bias10", "sd10", "Avg Est10", "Bias11", "sd11", "Avg Est11")
+```
+
+Plot biases, $\phi_s(0,0)$ $\phi_s(0,1)$ $\phi_s(1,0)$ $\phi_s(1,1)$
+
+```{r}
+plot(x= 1:17, y=perf_measures_sim9[,1], type = "p", main = "Plot of Bias Phi(0,0) Against Site on Sequence (Fourwise, q=0.005)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+
+plot(x= 1:17, y=perf_measures_sim9[,4], type = "p", main = "Plot of Bias Phi(0,1) Against Site on Sequence (Fourwise, q=0.005)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+
+plot(x= 1:17, y=perf_measures_sim9[,7], type = "p", main = "Plot of Bias Phi(1,0) Against Site on Sequence (Fourwise, q=0.005)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+
+plot(x= 1:17, y=perf_measures_sim9[,10], type = "p", main = "Plot of Bias Phi(1,1) Against Site on Sequence (Fourwise, q=0.005)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+```
+
+Observation from this plot: $\phi_s(1,1)$ shows the smallest bias, $\phi_s(0,0)$ and $\phi_s(0,1)$ have overall larger bias with the latter also showing an outlier
+
+
+Plot standard deviations, $\phi_s(0,0)$ $\phi_s(0,1)$ $\phi_s(1,0)$ $\phi_s(1,1)$
+```{r}
+plot(x= 1:17, y=perf_measures_sim9[,2], type = "p", main = "Plot of SD for Phi(0,0) Against Site on Sequence (Fourwise, q=0.005)", xlab = "Site (s)", ylab = "SD")
+
+plot(x= 1:17, y=perf_measures_sim9[,5], type = "p", main = "Plot of SD for Phi(0,1) Against Site on Sequence (Fourwise, q=0.005)", xlab = "Site (s)", ylab = "SD")
+
+plot(x= 1:17, y=perf_measures_sim9[,8], type = "p", main = "Plot of SD for Phi(1,0) Against Site on Sequence (Fourwise, q=0.005)", xlab = "Site (s)", ylab = "SD")
+
+plot(x= 1:17, y=perf_measures_sim9[,11], type = "p", main = "Plot of SD for Phi(1,1) Against Site on Sequence (Fourwise, q=0.005)", xlab = "Site (s)", ylab = "SD")
+```
+
+
+Compare to true values, $\phi_s(0,0)$ $\phi_s(0,1)$ $\phi_s(1,0)$ $\phi_s(1,1)$
+
+```{r}
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi00), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim9[,3]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim9[,3], ymin = perf_measures_sim9[,3] - 2*perf_measures_sim9[,2], ymax = perf_measures_sim9[,3] + 2*perf_measures_sim9[,2]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(0,0) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.005)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi01), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim9[,6]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim9[,6], ymin = perf_measures_sim9[,6] - 2*perf_measures_sim9[,5], ymax = perf_measures_sim9[,6] + 2*perf_measures_sim9[,5]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(0,1) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.005)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi10), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim9[,9]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim9[,9], ymin = perf_measures_sim9[,9] - 2*perf_measures_sim9[,8], ymax = perf_measures_sim9[,9] + 2*perf_measures_sim9[,8]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(1,0) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.005)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi11), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim9[,12]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim9[,12], ymin = perf_measures_sim9[,12] - 2*perf_measures_sim9[,11], ymax = perf_measures_sim9[,12] + 2*perf_measures_sim9[,11]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(1,1) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.005)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+```
+
+
+
+##SIMULATION10: L=20, n=100, q=0.01, m=3
+
+Then, obtain the fourwise estimates for each of the 100 replications.
+
+```{r}
+# initialize matrix to store bias and SD
+simulation_results10_phi00 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results10_phi00) <- paste("site_",seq(1:17),sep="")
+simulation_results10_phi01 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results10_phi01) <- paste("site_",seq(1:17),sep="")
+simulation_results10_phi10 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results10_phi10) <- paste("site_",seq(1:17),sep="")
+simulation_results10_phi11 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results10_phi11) <- paste("site_",seq(1:17),sep="")
+# sim9_full <- vector(length = 100)
+
+comp_time10 <- proc.time()
+# 100 REPLICATIONS
+for (i in 1:100){
+  # print("seed:")
+  # print(i)
+  # find descendant sample using index as the seed
+  descend_sample <- descendent_sample(L=20, q=0.01, n=100, seed = i, hapmap = hapmap_binary)
+
+  # find threewise estimates (only needed for estimating full, commented out to save time)
+  # threewise_estimates <- estimates_m2(L=20, q=0.01, n=100, descend = descend_sample)
+  
+  # find fourwise estimates
+  fourwise_estimates <- estimates_m3(L=20, q=0.01, n=100, d = descend_sample)
+  
+  # append estimate for this replication into the matrix
+  simulation_results10_phi00[i,] <- fourwise_estimates[1,]
+  simulation_results10_phi01[i,] <- fourwise_estimates[3,]
+  simulation_results10_phi10[i,] <- fourwise_estimates[5,]
+  simulation_results10_phi11[i,] <- fourwise_estimates[7,]
+  # sim9_full[i] <- prod(fourwise_estimates[1,]) / prod(threewise_estimates[1, 2:17])
+}
+comp_timefinal10 <- proc.time() - comp_time10
+```
+
+The computation time was
+
+```{r}
+comp_timefinal10[3]
+```
+
+Calculate the bias for each $\phi_s(0), \phi_s(1)$ for $s \in \{1,...,18\}$
+
+```{r}
+perf_measures_sim10 <- matrix(NA, nrow = 17, ncol = 12)
+for (k in 1:17){
+  perf_measures_sim10[k, 1] <- mean(simulation_results10_phi00[,k]) - true_phi00[k]
+  perf_measures_sim10[k, 2] <- sd(simulation_results10_phi00[,k])
+  perf_measures_sim10[k, 3] <- mean(simulation_results10_phi00[,k])
+  
+  perf_measures_sim10[k, 4] <- mean(simulation_results10_phi01[,k]) - true_phi01[k]
+  perf_measures_sim10[k, 5] <- sd(simulation_results10_phi01[,k])
+  perf_measures_sim10[k, 6] <- mean(simulation_results10_phi01[,k])
+  
+  perf_measures_sim10[k, 7] <- mean(simulation_results10_phi10[,k]) - true_phi10[k]
+  perf_measures_sim10[k, 8] <- sd(simulation_results10_phi10[,k])
+  perf_measures_sim10[k, 9] <- mean(simulation_results10_phi10[,k])
+  
+  perf_measures_sim10[k, 10] <- mean(simulation_results10_phi11[,k]) - true_phi11[k]
+  perf_measures_sim10[k, 11] <- sd(simulation_results10_phi11[,k])
+  perf_measures_sim10[k, 12] <- mean(simulation_results10_phi11[,k])
+}
+colnames(perf_measures_sim10) <- c("Bias00", "sd00", "Avg Est00", "Bias01", "sd01", "Avg Est01", "Bias10", "sd10", "Avg Est10", "Bias11", "sd11", "Avg Est11")
+```
+
+Plot bias, 
+
+```{r}
+plot(x= 1:17, y=perf_measures_sim10[,1], type = "p", main = "Plot of Bias Phi(0,0) Against Site on Sequence (Fourwise, q=0.01)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+
+plot(x= 1:17, y=perf_measures_sim10[,4], type = "p", main = "Plot of Bias Phi(0,1) Against Site on Sequence (Fourwise, q=0.01)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+
+plot(x= 1:17, y=perf_measures_sim10[,7], type = "p", main = "Plot of Bias Phi(1,0) Against Site on Sequence (Fourwise, q=0.01)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+
+plot(x= 1:17, y=perf_measures_sim10[,10], type = "p", main = "Plot of Bias Phi(1,1) Against Site on Sequence (Fourwise, q=0.01)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+```
+
+
+Plot standard deviations, 
+```{r}
+plot(x= 1:17, y=perf_measures_sim10[,2], type = "p", main = "Plot of SD for Phi(0,0) Against Site on Sequence (Fourwise, q=0.01)", xlab = "Site (s)", ylab = "SD")
+
+plot(x= 1:17, y=perf_measures_sim10[,5], type = "p", main = "Plot of SD for Phi(0,1) Against Site on Sequence (Fourwise, q=0.01)", xlab = "Site (s)", ylab = "SD")
+
+plot(x= 1:17, y=perf_measures_sim10[,8], type = "p", main = "Plot of SD for Phi(1,0) Against Site on Sequence (Fourwise, q=0.01)", xlab = "Site (s)", ylab = "SD")
+
+plot(x= 1:17, y=perf_measures_sim10[,11], type = "p", main = "Plot of SD for Phi(1,1) Against Site on Sequence (Fourwise, q=0.01)", xlab = "Site (s)", ylab = "SD")
+```
+
+
+
+Compare to true values, 
+
+```{r}
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi00), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim10[,3]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim10[,3], ymin = perf_measures_sim10[,3] - 2*perf_measures_sim10[,2], ymax = perf_measures_sim10[,3] + 2*perf_measures_sim10[,2]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(0,0) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.01)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi01), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim10[,6]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim10[,6], ymin = perf_measures_sim10[,6] - 2*perf_measures_sim10[,5], ymax = perf_measures_sim10[,6] + 2*perf_measures_sim10[,5]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(0,1) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.01)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi10), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim10[,9]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim10[,9], ymin = perf_measures_sim10[,9] - 2*perf_measures_sim10[,8], ymax = perf_measures_sim10[,9] + 2*perf_measures_sim10[,8]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(1,0) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.01)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi11), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim10[,12]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim10[,12], ymin = perf_measures_sim10[,12] - 2*perf_measures_sim10[,11], ymax = perf_measures_sim10[,12] + 2*perf_measures_sim10[,11]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(1,1) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.01)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+```
+
+
+##SIMULATION11: L=20, n=100, q=0.05, m=3
+
+Then, obtain the pairwise estimates for each of the 100 replications.
+
+```{r}
+# initialize matrix to store bias and SD
+simulation_results11_phi00 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results11_phi00) <- paste("site_",seq(1:17),sep="")
+simulation_results11_phi01 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results11_phi01) <- paste("site_",seq(1:17),sep="")
+simulation_results11_phi10 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results11_phi10) <- paste("site_",seq(1:17),sep="")
+simulation_results11_phi11 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results11_phi11) <- paste("site_",seq(1:17),sep="")
+# sim9_full <- vector(length = 100)
+
+comp_time11 <- proc.time()
+# 100 REPLICATIONS
+for (i in 1:100){
+  # print("seed:")
+  # print(i)
+  # find descendant sample using index as the seed
+  descend_sample <- descendent_sample(L=20, q=0.05, n=100, seed = i, hapmap = hapmap_binary)
+
+  # find threewise estimates (only needed for estimating full, commented out to save time)
+  # threewise_estimates <- estimates_m2(L=20, q=0.01, n=100, descend = descend_sample)
+  
+  # find fourwise estimates
+  fourwise_estimates <- estimates_m3(L=20, q=0.05, n=100, d = descend_sample)
+  
+  # append estimate for this replication into the matrix
+  simulation_results11_phi00[i,] <- fourwise_estimates[1,]
+  simulation_results11_phi01[i,] <- fourwise_estimates[3,]
+  simulation_results11_phi10[i,] <- fourwise_estimates[5,]
+  simulation_results11_phi11[i,] <- fourwise_estimates[7,]
+  # sim9_full[i] <- prod(fourwise_estimates[1,]) / prod(threewise_estimates[1, 2:17])
+}
+comp_timefinal11 <- proc.time() - comp_time11
+```
+
+The computation time was
+
+```{r}
+comp_timefinal11[3]
+```
+
+
+```{r}
+perf_measures_sim11 <- matrix(NA, nrow = 17, ncol = 12)
+for (k in 1:17){
+  perf_measures_sim11[k, 1] <- mean(simulation_results11_phi00[,k]) - true_phi00[k]
+  perf_measures_sim11[k, 2] <- sd(simulation_results11_phi00[,k])
+  perf_measures_sim11[k, 3] <- mean(simulation_results11_phi00[,k])
+  
+  perf_measures_sim11[k, 4] <- mean(simulation_results11_phi01[,k]) - true_phi01[k]
+  perf_measures_sim11[k, 5] <- sd(simulation_results11_phi01[,k])
+  perf_measures_sim11[k, 6] <- mean(simulation_results11_phi01[,k])
+  
+  perf_measures_sim11[k, 7] <- mean(simulation_results11_phi10[,k]) - true_phi10[k]
+  perf_measures_sim11[k, 8] <- sd(simulation_results11_phi10[,k])
+  perf_measures_sim11[k, 9] <- mean(simulation_results11_phi10[,k])
+  
+  perf_measures_sim11[k, 10] <- mean(simulation_results11_phi11[,k]) - true_phi11[k]
+  perf_measures_sim11[k, 11] <- sd(simulation_results11_phi11[,k])
+  perf_measures_sim11[k, 12] <- mean(simulation_results11_phi11[,k])
+}
+colnames(perf_measures_sim11) <- c("Bias00", "sd00", "Avg Est00", "Bias01", "sd01", "Avg Est01", "Bias10", "sd10", "Avg Est10", "Bias11", "sd11", "Avg Est11")
+```
+
+Plot bias, 
+
+```{r}
+plot(x= 1:17, y=perf_measures_sim11[,1], type = "p", main = "Plot of Bias Phi(0,0) Against Site on Sequence (Fourwise, q=0.05)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+
+plot(x= 1:17, y=perf_measures_sim11[,4], type = "p", main = "Plot of Bias Phi(0,1) Against Site on Sequence (Fourwise, q=0.05)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+
+plot(x= 1:17, y=perf_measures_sim11[,7], type = "p", main = "Plot of Bias Phi(1,0) Against Site on Sequence (Fourwise, q=0.05)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+
+plot(x= 1:17, y=perf_measures_sim11[,10], type = "p", main = "Plot of Bias Phi(1,1) Against Site on Sequence (Fourwise, q=0.05)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+```
+
+
+Plot standard deviations, 
+```{r}
+plot(x= 1:17, y=perf_measures_sim11[,2], type = "p", main = "Plot of SD for Phi(0,0) Against Site on Sequence (Fourwise, q=0.05)", xlab = "Site (s)", ylab = "SD")
+
+plot(x= 1:17, y=perf_measures_sim11[,5], type = "p", main = "Plot of SD for Phi(0,1) Against Site on Sequence (Fourwise, q=0.05)", xlab = "Site (s)", ylab = "SD")
+
+plot(x= 1:17, y=perf_measures_sim11[,8], type = "p", main = "Plot of SD for Phi(1,0) Against Site on Sequence (Fourwise, q=0.05)", xlab = "Site (s)", ylab = "SD")
+
+plot(x= 1:17, y=perf_measures_sim11[,11], type = "p", main = "Plot of SD for Phi(1,1) Against Site on Sequence (Fourwise, q=0.05)", xlab = "Site (s)", ylab = "SD")
+```
+
+
+
+Compare to true values, $\phi_s(0)$
+
+```{r}
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi00), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim11[,3]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim11[,3], ymin = perf_measures_sim11[,3] - 2*perf_measures_sim11[,2], ymax = perf_measures_sim11[,3] + 2*perf_measures_sim11[,2]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(0,0) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.05)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi01), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim11[,6]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim11[,6], ymin = perf_measures_sim11[,6] - 2*perf_measures_sim11[,5], ymax = perf_measures_sim11[,6] + 2*perf_measures_sim11[,5]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(0,1) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.05)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi10), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim11[,9]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim11[,9], ymin = perf_measures_sim11[,9] - 2*perf_measures_sim11[,8], ymax = perf_measures_sim11[,9] + 2*perf_measures_sim11[,8]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(1,0) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.05)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi11), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim11[,12]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim11[,12], ymin = perf_measures_sim11[,12] - 2*perf_measures_sim11[,11], ymax = perf_measures_sim11[,12] + 2*perf_measures_sim11[,11]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(1,1) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.05)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+```
+Compare to true values, $\phi_s(1)$
+
+```{r}
+ggplot() +
+  geom_point(aes(x = 1:18, y = true_phi1_sim2), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:18, y = perf_measures_sim7[,6]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:18, perf_measures_sim7[,6], ymin = perf_measures_sim7[,6] - 2*perf_measures_sim7[,5], ymax = perf_measures_sim7[,6] + 2*perf_measures_sim7[,5]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(1) w/ 2*sd Compared with True Value", subtitle = "(Threewise, q=0.05)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+```
+
+Full bias & sd:
+
+```{r}
+avg_full7 <- mean(sim7_full)
+bias_full7 <- mean(sim7_full) - ancestor_sim1[1,1]
+sd_full7 <- sd(sim7_full)
+c(avg_full7, bias_full7, sd_full7)
+```
+
+##SIMULATION12: L=20, n=100, q=0.1, m=2
+
+Then, obtain the pairwise estimates for each of the 100 replications.
+
+```{r}
+# initialize matrix to store bias and SD
+simulation_results12_phi00 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results12_phi00) <- paste("site_",seq(1:17),sep="")
+simulation_results12_phi01 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results12_phi01) <- paste("site_",seq(1:17),sep="")
+simulation_results12_phi10 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results12_phi10) <- paste("site_",seq(1:17),sep="")
+simulation_results12_phi11 <- matrix(NA, nrow = 100, ncol = 17)
+colnames(simulation_results12_phi11) <- paste("site_",seq(1:17),sep="")
+# sim9_full <- vector(length = 100)
+
+comp_time12 <- proc.time()
+# 100 REPLICATIONS
+for (i in 1:100){
+  # print("seed:")
+  # print(i)
+  # find descendant sample using index as the seed
+  descend_sample <- descendent_sample(L=20, q=0.1, n=100, seed = i, hapmap = hapmap_binary)
+
+  # find threewise estimates (only needed for estimating full, commented out to save time)
+  # threewise_estimates <- estimates_m2(L=20, q=0.01, n=100, descend = descend_sample)
+  
+  # find fourwise estimates
+  fourwise_estimates <- estimates_m3(L=20, q=0.1, n=100, d = descend_sample)
+  
+  # append estimate for this replication into the matrix
+  simulation_results12_phi00[i,] <- fourwise_estimates[1,]
+  simulation_results12_phi01[i,] <- fourwise_estimates[3,]
+  simulation_results12_phi10[i,] <- fourwise_estimates[5,]
+  simulation_results12_phi11[i,] <- fourwise_estimates[7,]
+  # sim9_full[i] <- prod(fourwise_estimates[1,]) / prod(threewise_estimates[1, 2:17])
+}
+comp_timefinal12 <- proc.time() - comp_time12
+```
+
+The computation time was
+
+```{r}
+comp_timefinal12[3]
+```
+Calculate the bias for each $\phi_s(0), \phi_s(1)$ for $s \in \{1,...,18\}$
+
+```{r}
+perf_measures_sim12 <- matrix(NA, nrow = 17, ncol = 12)
+for (k in 1:17){
+  perf_measures_sim12[k, 1] <- mean(simulation_results12_phi00[,k]) - true_phi00[k]
+  perf_measures_sim12[k, 2] <- sd(simulation_results12_phi00[,k])
+  perf_measures_sim12[k, 3] <- mean(simulation_results12_phi00[,k])
+  
+  perf_measures_sim12[k, 4] <- mean(simulation_results12_phi01[,k]) - true_phi01[k]
+  perf_measures_sim12[k, 5] <- sd(simulation_results12_phi01[,k])
+  perf_measures_sim12[k, 6] <- mean(simulation_results12_phi01[,k])
+  
+  perf_measures_sim12[k, 7] <- mean(simulation_results12_phi10[,k]) - true_phi10[k]
+  perf_measures_sim12[k, 8] <- sd(simulation_results12_phi10[,k])
+  perf_measures_sim12[k, 9] <- mean(simulation_results12_phi10[,k])
+  
+  perf_measures_sim12[k, 10] <- mean(simulation_results12_phi11[,k]) - true_phi11[k]
+  perf_measures_sim12[k, 11] <- sd(simulation_results12_phi11[,k])
+  perf_measures_sim12[k, 12] <- mean(simulation_results12_phi11[,k])
+}
+colnames(perf_measures_sim12) <- c("Bias00", "sd00", "Avg Est00", "Bias01", "sd01", "Avg Est01", "Bias10", "sd10", "Avg Est10", "Bias11", "sd11", "Avg Est11")
+
+### save in Excel to copy over later
+# write_xlsx(as.data.frame(perf_measures_sim12), path = "C:/Users/gbean/Documents/PerformanceMeasures12.xlsx", col_names = TRUE)
+```
+
+Plot bias, 
+
+```{r}
+plot(x= 1:17, y=perf_measures_sim12[,1], type = "p", main = "Plot of Bias Phi(0,0) Against Site on Sequence (Fourwise, q=0.1)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+
+plot(x= 1:17, y=perf_measures_sim12[,4], type = "p", main = "Plot of Bias Phi(0,1) Against Site on Sequence (Fourwise, q=0.1)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+
+plot(x= 1:17, y=perf_measures_sim12[,7], type = "p", main = "Plot of Bias Phi(1,0) Against Site on Sequence (Fourwise, q=0.1)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+
+plot(x= 1:17, y=perf_measures_sim12[,10], type = "p", main = "Plot of Bias Phi(1,1) Against Site on Sequence (Fourwise, q=0.1)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+```
+
+
+Plot standard deviations, 
+```{r}
+plot(x= 1:17, y=perf_measures_sim12[,2], type = "p", main = "Plot of SD for Phi(0,0) Against Site on Sequence (Fourwise, q=0.1)", xlab = "Site (s)", ylab = "SD")
+
+plot(x= 1:17, y=perf_measures_sim12[,5], type = "p", main = "Plot of SD for Phi(0,1) Against Site on Sequence (Fourwise, q=0.1)", xlab = "Site (s)", ylab = "SD")
+
+plot(x= 1:17, y=perf_measures_sim12[,8], type = "p", main = "Plot of SD for Phi(1,0) Against Site on Sequence (Fourwise, q=0.1)", xlab = "Site (s)", ylab = "SD")
+
+plot(x= 1:17, y=perf_measures_sim12[,11], type = "p", main = "Plot of SD for Phi(1,1) Against Site on Sequence (Fourwise, q=0.1)", xlab = "Site (s)", ylab = "SD")
+```
+
+
+Compare to true values, 
+
+```{r}
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi00), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim12[,3]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim12[,3], ymin = perf_measures_sim12[,3] - 2*perf_measures_sim12[,2], ymax = perf_measures_sim12[,3] + 2*perf_measures_sim12[,2]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(0,0) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.1)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi01), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim12[,6]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim12[,6], ymin = perf_measures_sim12[,6] - 2*perf_measures_sim12[,5], ymax = perf_measures_sim12[,6] + 2*perf_measures_sim12[,5]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(0,1) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.1)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi10), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim12[,9]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim12[,9], ymin = perf_measures_sim12[,9] - 2*perf_measures_sim12[,8], ymax = perf_measures_sim12[,9] + 2*perf_measures_sim12[,8]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(1,0) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.1)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+
+ggplot() +
+  geom_point(aes(x = 1:17, y = true_phi11), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:17, y = perf_measures_sim12[,12]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:17, perf_measures_sim12[,12], ymin = perf_measures_sim12[,12] - 2*perf_measures_sim12[,11], ymax = perf_measures_sim12[,12] + 2*perf_measures_sim12[,11]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(1,1) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.1)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+```
+
+
+```{r}
+ggplot() +
+  geom_point(aes(x = 1:18, y = true_phi1_sim2), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:18, y = perf_measures_sim8[,6]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:18, perf_measures_sim8[,6], ymin = perf_measures_sim8[,6] - 2*perf_measures_sim8[,5], ymax = perf_measures_sim8[,6] + 2*perf_measures_sim8[,5]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates Phi(1) w/ 2*sd Compared with True Value", subtitle = "(Threewise, q=0.1)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+```
+
+Full bias & sd:
+
+```{r}
+avg_full8 <- mean(sim8_full)
+bias_full8 <- mean(sim8_full) - ancestor_sim1[1,1]
+sd_full8 <- sd(sim8_full)
+c(avg_full8, bias_full8, sd_full8)
+```

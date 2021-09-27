@@ -1,0 +1,546 @@
+---
+title: "Simulation for Final Presentation: Pairwise Estimation"
+author: "Grace Rhodes"
+date: "7/22/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load packages and files:
+```{r}
+# LIBRARY FUNCTION CALLS
+library(ggplot2)
+library(sfsmisc)
+library(writexl)
+
+# SOURCE FUNCTION CALLS
+source("reading_data.R")
+source("ancestor_L3_bitwise.R")
+source("ancestor_general.R")
+source("descendant_sequences.R")
+source("onewise_marginal.R")
+source("pairwise_marginal.R")
+source("estimate_ancestor.R")
+```
+
+
+For this simulation, we hold the sequence length fixed at $L=20,$ the number of descendants fixed at $n=100,$ and the number of replications fixed at $N=100.$
+
+We will be using 4 values for the recombination probability: $q=0.005, 0.01, 0.05, 0.10$
+
+We will be using 4 values for the Markov Chain order: $m=0,1,2,3$ *this file contains the simulations for m=1*
+
+The ancestor distribution for this simulation is based on the trios in YRI population on chromosome 1 with a sequence length of L=20
+
+```{r}
+ancestor_sim1 <- ancestor(L=20, hapmap_data = hapmap_binary)
+head(ancestor_sim1)
+```
+
+##SIMULATION1: L=20, n=100, q=0.005, m=1
+
+(pairwise)
+
+For this value of m, there are 19 pairwise sites to compare. Based on the reparameterization, all the parameters depend on the selected free parameter $\pi_{s,s+1}(0,0) = \phi_s$. We will calculate the bias and standard deviation for each of the $\phi_1 \ldots \phi_{19}$. First, find the true parameter values.
+
+```{r}
+an_seq <- matrix(c(0:(2^(20)-1)), ncol=1)
+an_seq <- t( apply(an_seq,1,digitsBase, base=2, ndigits=20) ) 
+
+true_phi_sim1 <- rep(NA, 19)
+for (j in 1:19){
+  to_sum <- rep(NA, 2^20)
+  for (h in 1:(2^20)){
+    if (an_seq[h, j] == 0 & an_seq[h, (j+1)]==0){
+      to_sum[h] <- ancestor_sim1[h]
+    }
+  }
+  true_phi_sim1[j] <- sum(to_sum, na.rm = TRUE)
+}
+true_phi_sim1
+```
+Find the number of true ancestor sequences that have a non-zero probability:
+
+```{r}
+num_zero <- sum(ancestor_sim1[,1] == 0)
+num_nonzero <- 2^(20) - num_zero
+num_nonzero
+```
+
+Then, obtain the pairwise estimates for each of the 100 replications.
+
+```{r}
+# initialize matrix to store bias and SD
+simulation_results1 <- matrix(NA, nrow = 100, ncol = 19)
+colnames(simulation_results1) <- paste("site_",seq(1:19),sep="")
+sim1_full <- matrix(NA, nrow=(num_nonzero), ncol=102)
+colnames(sim1_full) <- c("Bitwise", "True", paste("Rep_", seq(1:100), sep=""))
+indx <- 1
+for (i in 1:dim(ancestor_sim1)[1]){
+  if (ancestor_sim1[i,1] != 0){
+    sim1_full[indx,1] <- i
+    sim1_full[indx,2] <- ancestor_sim1[i,1]
+    indx <- indx + 1
+  }
+}
+# CHUNK 1 OF 5
+comp_time1 <- proc.time()
+# 100 REPLICATIONS
+for (i in 1:20){
+  # find descendant sample using index as the seed
+  descend_sample <- descendent_sample(L=20, q=0.005, n=100, seed = i, hapmap = hapmap_binary)
+  
+  # find onewise estimates
+  onewise_estimates <- estimates_m0(descendents = descend_sample, L=20, n=100)
+  
+  # find pairwise estimates
+  pairwise_estimates <- estimates_m1(L=20, q=0.005, n=100, d= descend_sample)
+  
+  # append estimate for this replication into the matrix
+  simulation_results1[i,] <- pairwise_estimates[1,]
+  sim1_full[,(i+2)] <- (ancestor_pairs(L=20, pairs = pairwise_estimates, ones = onewise_estimates))[(sim1_full)[,1],1]
+}
+comp_timefinal <- proc.time() - comp_time1
+
+# CHUNK 2 OF 5
+comp_time1a <- proc.time()
+# 100 REPLICATIONS
+for (i in 21:40){
+  # find descendant sample using index as the seed
+  descend_sample <- descendent_sample(L=20, q=0.005, n=100, seed = i, hapmap = hapmap_binary)
+  
+  # find onewise estimates
+  onewise_estimates <- estimates_m0(descendents = descend_sample, L=20, n=100)
+  
+  # find pairwise estimates
+  pairwise_estimates <- estimates_m1(L=20, q=0.005, n=100, d= descend_sample)
+  
+  # append estimate for this replication into the matrix
+  simulation_results1[i,] <- pairwise_estimates[1,]
+  sim1_full[,(i+2)] <- (ancestor_pairs(L=20, pairs = pairwise_estimates, ones = onewise_estimates))[(sim1_full)[,1],1]
+}
+comp_timefinal1a <- proc.time() - comp_time1a
+
+# CHUNK 3 OF 5
+comp_time1b <- proc.time()
+# ended on 57
+for (i in 41:60){
+  # find descendant sample using index as the seed
+  descend_sample <- descendent_sample(L=20, q=0.005, n=100, seed = i, hapmap = hapmap_binary)
+  
+  # find onewise estimates
+  onewise_estimates <- estimates_m0(descendents = descend_sample, L=20, n=100)
+  
+  # find pairwise estimates
+  pairwise_estimates <- estimates_m1(L=20, q=0.005, n=100, d= descend_sample)
+  
+  # append estimate for this replication into the matrix
+  simulation_results1[i,] <- pairwise_estimates[1,]
+  sim1_full[,(i+2)] <- (ancestor_pairs(L=20, pairs = pairwise_estimates, ones = onewise_estimates))[(sim1_full)[,1],1]
+}
+comp_timefinal1b <- proc.time() - comp_time1b
+
+comp_time1b_a <- proc.time()
+# ended on 57
+for (i in 58:60){
+  # find descendant sample using index as the seed
+  descend_sample <- descendent_sample(L=20, q=0.005, n=100, seed = i, hapmap = hapmap_binary)
+  
+  # find onewise estimates
+  onewise_estimates <- estimates_m0(descendents = descend_sample, L=20, n=100)
+  
+  # find pairwise estimates
+  pairwise_estimates <- estimates_m1(L=20, q=0.005, n=100, d= descend_sample)
+  
+  # append estimate for this replication into the matrix
+  simulation_results1[i,] <- pairwise_estimates[1,]
+  sim1_full[,(i+2)] <- (ancestor_pairs(L=20, pairs = pairwise_estimates, ones = onewise_estimates))[(sim1_full)[,1],1]
+}
+comp_timefinal1b_a <- proc.time() - comp_time1b_a
+
+# CHUNK 4 OF 5
+comp_time1c <- proc.time()
+# ended on 57
+for (i in 61:80){
+  # find descendant sample using index as the seed
+  descend_sample <- descendent_sample(L=20, q=0.005, n=100, seed = i, hapmap = hapmap_binary)
+  
+  # find onewise estimates
+  onewise_estimates <- estimates_m0(descendents = descend_sample, L=20, n=100)
+  
+  # find pairwise estimates
+  pairwise_estimates <- estimates_m1(L=20, q=0.005, n=100, d= descend_sample)
+  
+  # append estimate for this replication into the matrix
+  simulation_results1[i,] <- pairwise_estimates[1,]
+  sim1_full[,(i+2)] <- (ancestor_pairs(L=20, pairs = pairwise_estimates, ones = onewise_estimates))[(sim1_full)[,1],1]
+}
+comp_timefinal1c <- proc.time() - comp_time1c
+
+write_xlsx(as.data.frame(sim1_full), path = "C:/Users/gbean/Documents/simulation1_joint.xlsx")
+```
+
+The computation time was
+
+```{r}
+comp_timefinal[3]
+comp_time1a[3]
+comp_time1b_a[3]
+comp_timefinal1c[3]
+```
+
+```{r}
+sim1_full <- readxl::read_xlsx("C:/Users/gbean/Documents/simulation1_joint.xlsx")
+sim1_full <- as.matrix(sim1_full)
+```
+
+
+Calculate the bias for each $\phi_s$ for $s \in \{1,...,19\}$
+
+```{r}
+perf_measures_sim1 <- matrix(NA, nrow = 19, ncol = 3)
+for (k in 1:19){
+  bias <- mean(simulation_results1[,k]) - true_phi_sim1[k]
+  sd <- sd(simulation_results1[,k])
+  perf_measures_sim1[k, 1] <- bias
+  perf_measures_sim1[k, 2] <- sd
+  perf_measures_sim1[k, 3] <- mean(simulation_results1[,k])
+}
+colnames(perf_measures_sim1) <- c("Bias", "sd", "Avg Est")
+```
+
+Plot of the biases:
+
+```{r}
+plot(x= 1:19, y=perf_measures_sim1[,1], type = "p", main = "Plot of Bias Against Site on Sequence (Pairwise, q=0.005)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+```
+
+Plot of the standard deviations:
+
+```{r}
+plot(x= 1:19, y=perf_measures_sim1[,2], type = "p", main = "Plot of SD Against Site on Sequence (Pairwise, q=0.005)", xlab = "Site (s)", ylab = "SD")
+```
+
+Based on the above plots, we can conclude that (for $L=20,$ $q=0.005,$ $m=1,$ and $n=100$) as we continue down the sequence, there is a slight downward trend to more negative biases and a slight upward trend in standard deviations. This implies a tendency for the parameter $\phi_s$ to be underestimated, as well as greater variability in the estimates.
+
+Plot of estimates of $\hat{\phi}_s$ with the true values:
+
+```{r}
+ggplot() +
+  geom_point(aes(x = 1:19, y = true_phi_sim1), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:19, y = perf_measures_sim1[,3]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:19, perf_measures_sim1[,3], ymin = perf_measures_sim1[,3] - 2*perf_measures_sim1[,2], ymax = perf_measures_sim1[,3] + 2*perf_measures_sim1[,2]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates w/ 2*sd Compared with True Value", subtitle = "(Pairwise, q=0.005)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+```
+
+Based on the above plot, we can conclude that (for $L=20,$ $q=0.005,$ $m=1,$ and $n=100$) the true parameter value $\phi_s$ is well within two standard deviations of the estimate for all sites $1,...,19$
+
+Bias & sd for full estimate:
+
+```{r}
+# bias_full1 <- sim1_full[,2] -  mean(sim1_full[,3:82])
+# 
+# sd_full1 <- sd(sim1_full)
+# c(avg_full1, bias_full1, sd_full1)
+
+full_perfmeasures1 <- matrix(NA, nrow = 91, ncol = 5)
+full_perfmeasures1[,1:2] <- sim1_full[,1:2]
+for (i in 1:91){
+  full_perfmeasures1[i,3] <- mean(sim1_full[i, 3:82])
+  full_perfmeasures1[i,4] <- mean(sim1_full[i, 3:82]) - full_perfmeasures1[i,2]
+  full_perfmeasures1[i,5] <- sd(sim1_full[i, 3:82])
+}
+colnames(full_perfmeasures1) <- c("Bitwise", "True,", "Avg Est",  "Bias", "SD")
+```
+
+```{r}
+# plot of bias
+plot(x = full_perfmeasures1[,1], y = full_perfmeasures1[,4], type = "p", main = "Plot of Bias and Ancestral Sequence", xlab = "Bitwise Value", ylab = "Bias")
+abline(h=0)
+
+# plot of sd
+plot(x = full_perfmeasures1[,1], y = full_perfmeasures1[,5], type = "p", main = "Plot of SD and Ancestral Sequence", xlab = "Bitwise Value", ylab = "Standard Deviation")
+
+# bias and sd
+plot(x = full_perfmeasures1[,4], y = full_perfmeasures1[,5], type = "p", xlab = "Bias", ylab = "SD")
+```
+
+```{r}
+ggplot(mapping = aes(x = full_perfmeasures1[,1], y = full_perfmeasures1[,2])) +
+  geom_col()
+```
+
+
+##SIMULATION2: L=20, n=100, q=0.01, m=1
+
+The true parameter values here are the same, keep using variable true_phi_sim1
+
+```{r}
+# initialize matrix to store bias and SD
+simulation_results2 <- matrix(NA, nrow = 100, ncol = 19)
+colnames(simulation_results2) <- paste("site_",seq(1:19),sep="")
+sim2_full <- vector(length = 100)
+
+comp_time2 <- proc.time()
+# 100 REPLICATIONS
+for (i in 1:100){
+  # find descendant sample using index as the seed
+  descend_sample <- descendent_sample(L=20, q=0.01, n=100, seed = i, hapmap = hapmap_binary)
+  
+  # find onewise estimates
+  onewise_estimates <- estimates_m0(descendents = descend_sample, L=20, n=100)
+  
+  # find pairwise estimates
+  pairwise_estimates <- estimates_m1(L= 20, q=0.01, n=100, d= descend_sample)
+  
+  # append estimate for this replication into the matrix
+  simulation_results2[i,] <- pairwise_estimates[1,]
+  sim2_full[i] <- prod(pairwise_estimates[1,]) / prod(onewise_estimates[1, 2:19])
+}
+comp_timefinal2 <- proc.time() - comp_time2
+```
+
+The computation time for this simulation was
+
+```{r}
+comp_timefinal2[3]
+```
+
+Calculate the bias for each $\phi_s$ for $s \in \{1,...,19\}$
+
+```{r}
+perf_measures_sim2 <- matrix(NA, nrow = 19, ncol = 3)
+for (k in 1:19){
+  bias <- mean(simulation_results2[,k]) - true_phi_sim1[k]
+  sd <- sd(simulation_results2[,k])
+  perf_measures_sim2[k, 1] <- bias
+  perf_measures_sim2[k, 2] <- sd
+  perf_measures_sim2[k, 3] <- mean(simulation_results2[,k])
+}
+colnames(perf_measures_sim2) <- c("Bias", "sd", "Avg Est")
+```
+
+
+Plot of the biases:
+
+```{r}
+plot(x= 1:19, y=perf_measures_sim2[,1], type = "p", main = "Plot of Bias Against Site on Sequence (Pairwise, q=0.01)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+```
+Based on the above plots, we can conclude that the trends of underestimates and greater variability in estimates as we move down the sequence persist for $q=0.01$
+
+Plot of the standard deviations:
+
+```{r}
+plot(x= 1:19, y=perf_measures_sim2[,2], type = "p", main = "Plot of SD Against Site on Sequence (Pairwise, q=0.01)", xlab = "Site (s)", ylab = "sd")
+```
+
+Plot of estimates of $\hat{\phi}_s$ with the true values:
+
+```{r}
+ggplot() +
+  geom_point(aes(x = 1:19, y = true_phi_sim1), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:19, y = perf_measures_sim2[,3]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:19, perf_measures_sim2[,3], ymin = perf_measures_sim2[,3] - 2*perf_measures_sim2[,2], ymax = perf_measures_sim2[,3] + 2*perf_measures_sim2[,2]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates w/ 2*sd Compared with True Value", subtitle= "(Pairwise, q=0.01)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+```
+Based on this plot, we can conclude that (for $L=20,$ $q=0.01,$ $m=1,$ and $n=100$) for all sites $1,...,19$ the true parameter value $\phi_s$ is well within two standard deviations of the estimate.
+
+Full bias & sd:
+
+```{r}
+avg_full2 <- mean(sim2_full)
+bias_full2 <- mean(sim2_full) - ancestor_sim1[1,1]
+sd_full2 <- sd(sim2_full)
+c(avg_full2, bias_full2, sd_full2)
+```
+
+##SIMULATION3: L=20, n=100, q=0.05, m=1
+
+The true parameter values here are the same, keep using variable true_phi_sim1
+
+```{r}
+# initialize matrix to store bias and SD
+simulation_results3 <- matrix(NA, nrow = 100, ncol = 19)
+colnames(simulation_results3) <- paste("site_",seq(1:19),sep="")
+sim3_full <- vector(length = 100)
+
+comp_time3 <- proc.time()
+# 100 REPLICATIONS
+for (i in 1:100){
+  # find descendant sample using index as the seed
+  descend_sample <- descendent_sample(L=20, q=0.05, n=100, seed = i, hapmap = hapmap_binary)
+  
+  # find onewise estimates
+  onewise_estimates <- estimates_m0(descendents = descend_sample, L=20, n=100)
+  
+  # find pairwise estimates
+  pairwise_estimates <- estimates_m1(L= 20, q=0.05, n=100, d= descend_sample)
+  
+  # append estimate for this replication into the matrix
+  simulation_results3[i,] <- pairwise_estimates[1,]
+  sim3_full[i] <- prod(pairwise_estimates[1,]) / prod(onewise_estimates[1, 2:19])
+}
+comp_timefinal3 <- proc.time() - comp_time3
+```
+
+The computation time for this simulation:
+
+```{r}
+comp_timefinal3[3]
+```
+
+Calculate bias, sd:
+
+```{r}
+perf_measures_sim3 <- matrix(NA, nrow = 19, ncol = 3)
+for (k in 1:19){
+  bias <- mean(simulation_results3[,k]) - true_phi_sim1[k]
+  sd <- sd(simulation_results3[,k])
+  perf_measures_sim3[k, 1] <- bias
+  perf_measures_sim3[k, 2] <- sd
+  perf_measures_sim3[k, 3] <- mean(simulation_results3[,k])
+}
+colnames(perf_measures_sim3) <- c("Bias", "sd", "Avg Est")
+```
+
+Plot of the biases:
+
+```{r}
+plot(x= 1:19, y=perf_measures_sim3[,1], type = "p", main = "Plot of Bias Against Site on Sequence (Pairwise, q=0.05)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+```
+
+Plot of the standard deviations:
+
+```{r}
+plot(x= 1:19, y=perf_measures_sim3[,2], type = "p", main = "Plot of SD Against Site on Sequence (Pairwise, q=0.05)", xlab = "Site (s)", ylab = "SD")
+```
+
+Based on the above plots, for this new value of $q$ ($q=0.05$), the trend towards underestimates as we move down the sequence seems less pronounced compared to the previous two simulations. The trend towards increased variability also seems slightly less pronounced. This may tentatively indicate that the directional effect is less extreme for larger values of $q.$
+
+Plot of estimates of $\hat{\phi}_s$ with the true values:
+
+```{r}
+ggplot() +
+  geom_point(aes(x = 1:19, y = true_phi_sim1), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:19, y = perf_measures_sim3[,3]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:19, perf_measures_sim3[,3], ymin = perf_measures_sim3[,3] - 2*perf_measures_sim3[,2], ymax = perf_measures_sim3[,3] + 2*perf_measures_sim3[,2]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates w/ 2*sd Compared with True Value", subtitle= "(Pairwise, q=0.05)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+```
+
+Based on the above plot, (for $L=20,$ $q=0.05,$ $m=1,$ and $n=100$) for all sites $1,...,19$ the true parameter value $\phi_s$ is well within two standard deviations of the estimate.
+
+Full bias & sd:
+
+```{r}
+avg_full3 <- mean(sim3_full)
+bias_full3 <- mean(sim3_full) - ancestor_sim1[1,1]
+sd_full3 <- sd(sim3_full)
+c(avg_full3, bias_full3, sd_full3)
+```
+
+##SIMULATION4: L=20, n=100, q=0.1, m=1
+
+The true parameter values here are the same, keep using variable true_phi_sim1
+
+```{r}
+# initialize matrix to store bias and SD
+simulation_results4 <- matrix(NA, nrow = 100, ncol = 19)
+colnames(simulation_results4) <- paste("site_",seq(1:19),sep="")
+sim4_full <- vector(length = 100)
+
+comp_time4 <- proc.time()
+# 100 REPLICATIONS
+for (i in 1:100){
+  # find descendant sample using index as the seed
+  descend_sample <- descendent_sample(L=20, q=0.1, n=100, seed = i, hapmap = hapmap_binary)
+  
+  # find onewise estimates
+  onewise_estimates <- estimates_m0(descendents = descend_sample, L=20, n=100)
+  
+  # find pairwise estimates
+  pairwise_estimates <- estimates_m1(L= 20, q=0.1, n=100, d= descend_sample)
+  
+  # append estimate for this replication into the matrix
+  simulation_results4[i,] <- pairwise_estimates[1,]
+  sim4_full[i] <- prod(pairwise_estimates[1,]) / prod(onewise_estimates[1, 2:19])
+}
+comp_timefinal4 <- proc.time() - comp_time4
+```
+
+The computation time for this simulation:
+
+```{r}
+comp_timefinal4[3]
+```
+
+Calculate bias, sd:
+
+```{r}
+perf_measures_sim4 <- matrix(NA, nrow = 19, ncol = 3)
+for (k in 1:19){
+  bias <- mean(simulation_results4[,k]) - true_phi_sim1[k]
+  sd <- sd(simulation_results4[,k])
+  perf_measures_sim4[k, 1] <- bias
+  perf_measures_sim4[k, 2] <- sd
+  perf_measures_sim4[k, 3] <- mean(simulation_results4[,k])
+}
+colnames(perf_measures_sim4) <- c("Bias", "sd", "Avg Est")
+```
+
+Plot of the biases:
+
+```{r}
+plot(x= 1:19, y=perf_measures_sim4[,1], type = "p", main = "Plot of Bias Against Site on Sequence (Pairwise, q=0.1)", xlab = "Site (s)", ylab = "Bias")
+abline(h=0)
+```
+
+Plot of the standard deviations:
+
+```{r}
+plot(x= 1:19, y=perf_measures_sim4[,2], type = "p", main = "Plot of SD Against Site on Sequence (Pairwise, q=0.1)", xlab = "Site (s)", ylab = "SD")
+```
+
+Based on the above plots, we can see that, overall, the bias is much greater for this larger value of $q$ ($q=0.1$). It also seems that, as we move down the sequence, there is a divergence towards either highly overestimating or highly underestimating. This may tentatively indicate that the directional effect is stronger for larger recombination rates holding constant $L, m, n.$ Additionally, the standard deviations are also larger in magnitude indicating overall greater variability for larger recombination rates.
+
+Plot of estimates of $\hat{\phi}_s$ with the true values:
+
+```{r}
+ggplot() +
+  geom_point(aes(x = 1:19, y = true_phi_sim1), colour = "red", shape = 8) +
+  geom_point(aes(x= 1:19, y = perf_measures_sim4[,3]), colour = "blue", size = 1) +
+  geom_errorbar(aes(1:19, perf_measures_sim4[,3], ymin = perf_measures_sim4[,3] - 2*perf_measures_sim4[,2], ymax = perf_measures_sim4[,3] + 2*perf_measures_sim3[,2]), color = "cornflowerblue") +
+  ggtitle(label = "Plot of Average Estimates w/ 2*sd Compared with True Value", subtitle = "(Pairwise, q=0.1)") +
+  xlab("Site on Sequence (s)") +
+  ylab("Probability")
+```
+
+Based on this plot, we can see that (for $L=20,$ $q=0.1,$ $m=1,$ and $n=100$) for all sites $1,...,19$ the true parameter value $\phi_s$ is well within two standard deviations of the estimate.
+
+Full bias & sd:
+
+```{r}
+avg_full4 <- mean(sim4_full)
+bias_full4 <- mean(sim4_full) - ancestor_sim1[1,1]
+sd_full4 <- sd(sim4_full)
+c(avg_full4, bias_full4, sd_full4)
+```
+
+##Overall conclusions:
+
+One observation we can make from this simulation is that, holding constant sequence length, MC order, and number of descendants, the computation time decreases as we increase the recombination rate.
+
+Another observation is that, as we increase the recombination rate, we see more of a relationship between both bias and standard deviation and sequence site. This may indicate that a directional effect is of more concern for larger values of $q.$
+
+Finally, we see that overall for all four values of $q$ the true parameter value is well within two standard deviations of the estimate. This indicates that, holding constant sequence length, MC order, and number of descendants, the accuracy of the estimates are overall robust to choices of recombination rate.

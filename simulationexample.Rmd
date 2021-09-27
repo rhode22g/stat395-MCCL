@@ -1,0 +1,120 @@
+---
+title: 'MCCL Recombination Model Simulation: First Run'
+author: "Grace Rhodes"
+date: "7/20/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(sfsmisc)
+source("reading_data.R", local = knitr::knit_global() )
+source("ancestor_general.R", local = knitr::knit_global() )
+source("ancestor_L3_bitwise.R", local = knitr::knit_global() )
+source("onewise_marginal.R", local = knitr::knit_global() )
+source("pairwise-marginal.R", local = knitr::knit_global() )
+source("threewise_marginal.R", local = knitr::knit_global() )
+source("fourwise_marginal.R", local = knitr::knit_global() )
+```
+
+For first test run on a simulation, use the following settings
+
+- Data: HapMap YRI population TRIOS for chromosome 1 (200 haplotypes)
+
+- Number of Descendants Generated: $n = 50$
+
+- Number of Replications: $N = 100$
+
+- Recombination Probability: $q = 0.01$
+
+- Sequence Length: $L = 100$ *change to L=20 because of computer storage issue*
+
+Compute the following performance measures:
+
+- Computation time using $proc.time()$
+
+- Bias for parameter $\pi_{1,2,3,4}(0,0,0,0)$
+
+- Standard deviation for parameter $\pi_{1,2,3,4}(0,0,0,0)$
+
+###STEP ONE: Read in the data to generate the simulated ancestor
+
+Raw data:
+```{r}
+head(yri_trio_1)
+```
+
+Data converted to binary sequences:
+
+**conversion done in R script "reading_data.R"
+```{r}
+head(hapmap_binary)
+```
+
+###STEP TWO: Simulate the ancestor 
+
+Using function "ancestor()" from script "ancestor_general.R"
+
+```{r}
+ancestor_sim1 <- ancestor(L=20, hapmap_data = hapmap_binary)
+head(ancestor_sim1)
+```
+
+Based on this ancestor distribution, we take the true parameter of interest to be:
+$$\pi_{1,2,\ldots , 20}(0,0, \ldots , 0 = 0.025.$$
+
+For the bias, calculation use equation:
+$$\hat{\pi}_{1,2,\ldots , 20}(0,0, \ldots , 0) = \frac{\hat{\pi}_{1,2,3,4}(0,0,0,0) \hat{\pi}_{2,3,4,5}(0,0,0,0) \ldots \hat{\pi}_{17,18,19,20}}{\hat{\pi}_{2,3,4}(0,0,0) \ldots \hat{\pi}_{17,18,19}(0,0,0)}$$
+
+```{r}
+# initialize matrix to store bias and SD
+simulation_results <- matrix(NA, nrow = 100, ncol = 1)
+colnames(simulation_results) <- c("estimate")
+
+comp_time1 <- proc.time()
+# 100 REPLICATIONS
+for (i in 1:100){
+  # find descendant sample using index as the seed
+  descend_sample <- descendent_sample(L=20, q=0.01, n=100, seed = i, hapmap = hapmap_binary)
+  
+  # find threewise estimate
+  threewise_estimates <- estimates_m2(L=20, q=0.01, n=100, descend=descend_sample)
+  
+  # find fourwise estimate
+  fourwise_estimates <- estimates_m3(L=20, q=0.01, n=100, d=descend_sample)
+  
+  # calculate estimate of parameter of interest
+  para <- (prod(fourwise_estimates[1,]) / prod(threewise_estimates[1, 2:17]))
+  
+  # append estimate for this replication into the matrix
+  simulation_results[i,] <- para
+}
+comp_timefinal <- proc.time() - comp_time1
+```
+
+Calculate the bias:
+
+```{r}
+bias <- mean(simulation_results[,1]) - ancestor_sim1[1,1]
+bias
+```
+
+Calculate the standard deviation:
+
+```{r}
+stand_dev <- sd(simulation_results[,1])
+stand_dev
+```
+
+Computation time:
+
+```{r}
+comp_timefinal
+```
+
+Tentative interpretation:
+
+Based on this simulation, the estimator yielded an estimate with relatively low bias (0.002978265) and small standard deviation (0.009381513). However, even for this small sequence length (L=20) the computation time was sizable (3504.96 milliseconds)
