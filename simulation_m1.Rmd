@@ -127,7 +127,7 @@ comp_timefinal1a <- proc.time() - comp_time1a
 # CHUNK 3 OF 5
 comp_time1b <- proc.time()
 # ended on 57
-for (i in 41:60){
+for (i in 88:100){
   # find descendant sample using index as the seed
   descend_sample <- descendent_sample(L=20, q=0.005, n=100, seed = i, hapmap = hapmap_binary)
   
