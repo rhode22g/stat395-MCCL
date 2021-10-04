@@ -15,6 +15,8 @@ Load packages and files:
 library(ggplot2)
 library(sfsmisc)
 library(writexl)
+library(AlgebraicHaploPackage)
+library(e1071)
 
 # SOURCE FUNCTION CALLS
 source("reading_data.R")
@@ -62,13 +64,27 @@ for (j in 1:19){
 }
 true_phi_sim1
 ```
-Find the number of true ancestor sequences that have a non-zero probability:
+
+Find the number of true ancestor sequences that have a non-zero probability and their bitwise values, as well as their neighbors:
 
 ```{r}
-num_zero <- sum(ancestor_sim1[,1] == 0)
-num_nonzero <- 2^(20) - num_zero
+num_nonzero <- sum(ancestor_sim1[,1] != 0)
 num_nonzero
+
+nonzero_bits <- which((ancestor_sim1[,1] != 0), arr.ind = TRUE)
+zero_bits <- which((ancestor_sim1[,1] == 0), arr.ind = TRUE)
+
+neighbors <- vector(length = 0)
+for (i in nonzero_bits){
+  distances <- t( apply(an_seq[nonzero_bits,], 1, FUN =  hamming.distance, y = an_seq[i,]))
+  n <- which(distances == 1, arr.ind = TRUE)
+  neighbors <- c(neighbors,n)
+}
+
+unique_neighbors <- unique(neighbors)
+nonzeros_and_neighbors <- sort(unique(c(nonzero_bits, unique_neighbors)))
 ```
+
 
 Then, obtain the pairwise estimates for each of the 100 replications.
 
@@ -76,17 +92,12 @@ Then, obtain the pairwise estimates for each of the 100 replications.
 # initialize matrix to store bias and SD
 simulation_results1 <- matrix(NA, nrow = 100, ncol = 19)
 colnames(simulation_results1) <- paste("site_",seq(1:19),sep="")
-sim1_full <- matrix(NA, nrow=(num_nonzero), ncol=102)
+sim1_full <- matrix(NA, nrow=(length(nonzeros_and_neighbors)), ncol=102)
 colnames(sim1_full) <- c("Bitwise", "True", paste("Rep_", seq(1:100), sep=""))
-indx <- 1
-for (i in 1:dim(ancestor_sim1)[1]){
-  if (ancestor_sim1[i,1] != 0){
-    sim1_full[indx,1] <- i
-    sim1_full[indx,2] <- ancestor_sim1[i,1]
-    indx <- indx + 1
-  }
-}
-# CHUNK 1 OF 5
+sim1_full[,1] <- nonzeros_and_neighbors
+sim1_full[,2] <- ancestor_sim1[nonzeros_and_neighbors,]
+
+# 100 replications
 comp_time1 <- proc.time()
 # 100 REPLICATIONS
 for (i in 1:100){
@@ -101,96 +112,19 @@ for (i in 1:100){
   
   # append estimate for this replication into the matrix
   simulation_results1[i,] <- pairwise_estimates[1,]
-  sim1_full[,(i+2)] <- (ancestor_pairs(L=20, pairs = pairwise_estimates, ones = onewise_estimates))[(sim1_full)[,1],1]
+  sim1_full[,(i+2)] <- (ancestor_pair_estimation(L=20, m=1, pairs_est = pairwise_estimates, ones_est = onewise_estimates))[nonzeros_and_neighbors,1]
 }
 comp_timefinal <- proc.time() - comp_time1
 
-# CHUNK 2 OF 5
-comp_time1a <- proc.time()
-# 100 REPLICATIONS
-for (i in 37:100){
-  # find descendant sample using index as the seed
-  descend_sample <- descendent_sample(L=20, q=0.005, n=100, seed = i, hapmap = hapmap_binary)
-  
-  # find onewise estimates
-  onewise_estimates <- estimates_m0(descendents = descend_sample, L=20, n=100)
-  
-  # find pairwise estimates
-  pairwise_estimates <- estimates_m1(L=20, q=0.005, n=100, d= descend_sample)
-  
-  # append estimate for this replication into the matrix
-  simulation_results1[i,] <- pairwise_estimates[1,]
-  sim1_full[,(i+2)] <- (ancestor_pairs(L=20, pairs = pairwise_estimates, ones = onewise_estimates))[(sim1_full)[,1],1]
-}
-comp_timefinal1a <- proc.time() - comp_time1a
 
-# CHUNK 3 OF 5
-comp_time1b <- proc.time()
-# ended on 57
-for (i in 88:100){
-  # find descendant sample using index as the seed
-  descend_sample <- descendent_sample(L=20, q=0.005, n=100, seed = i, hapmap = hapmap_binary)
-  
-  # find onewise estimates
-  onewise_estimates <- estimates_m0(descendents = descend_sample, L=20, n=100)
-  
-  # find pairwise estimates
-  pairwise_estimates <- estimates_m1(L=20, q=0.005, n=100, d= descend_sample)
-  
-  # append estimate for this replication into the matrix
-  simulation_results1[i,] <- pairwise_estimates[1,]
-  sim1_full[,(i+2)] <- (ancestor_pairs(L=20, pairs = pairwise_estimates, ones = onewise_estimates))[(sim1_full)[,1],1]
-}
-comp_timefinal1b <- proc.time() - comp_time1b
-
-comp_time1b_a <- proc.time()
-# ended on 57
-for (i in 58:60){
-  # find descendant sample using index as the seed
-  descend_sample <- descendent_sample(L=20, q=0.005, n=100, seed = i, hapmap = hapmap_binary)
-  
-  # find onewise estimates
-  onewise_estimates <- estimates_m0(descendents = descend_sample, L=20, n=100)
-  
-  # find pairwise estimates
-  pairwise_estimates <- estimates_m1(L=20, q=0.005, n=100, d= descend_sample)
-  
-  # append estimate for this replication into the matrix
-  simulation_results1[i,] <- pairwise_estimates[1,]
-  sim1_full[,(i+2)] <- (ancestor_pairs(L=20, pairs = pairwise_estimates, ones = onewise_estimates))[(sim1_full)[,1],1]
-}
-comp_timefinal1b_a <- proc.time() - comp_time1b_a
-
-# CHUNK 4 OF 5
-comp_time1c <- proc.time()
-# ended on 57
-for (i in 61:80){
-  # find descendant sample using index as the seed
-  descend_sample <- descendent_sample(L=20, q=0.005, n=100, seed = i, hapmap = hapmap_binary)
-  
-  # find onewise estimates
-  onewise_estimates <- estimates_m0(descendents = descend_sample, L=20, n=100)
-  
-  # find pairwise estimates
-  pairwise_estimates <- estimates_m1(L=20, q=0.005, n=100, d= descend_sample)
-  
-  # append estimate for this replication into the matrix
-  simulation_results1[i,] <- pairwise_estimates[1,]
-  sim1_full[,(i+2)] <- (ancestor_pairs(L=20, pairs = pairwise_estimates, ones = onewise_estimates))[(sim1_full)[,1],1]
-}
-comp_timefinal1c <- proc.time() - comp_time1c
-
-write_xlsx(as.data.frame(sim1_full), path = "/Users/rhode22g/Documents/sim1full.xlsx")
-write_xlsx(as.data.frame(simulation_results1), path = "/Users/rhode22g/Documents/sim1results.xlsx")
+write_xlsx(as.data.frame(sim1_full), path = "/Users/rhode22g/Documents/sim1full_neighbors.xlsx")
+write_xlsx(as.data.frame(simulation_results1), path = "/Users/rhode22g/Documents/sim1results_10042021.xlsx")
 ```
 
 The computation time was
 
 ```{r}
 comp_timefinal[3]
-comp_time1a[3]
-comp_time1b_a[3]
-comp_timefinal1c[3]
 ```
 
 ```{r}
