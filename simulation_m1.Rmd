@@ -135,6 +135,7 @@ comp_timefinal <- proc.time() - comp_time1
 
 write_xlsx(as.data.frame(sim1_full), path = "/Users/rhode22g/Documents/sim1full_neighbors.xlsx")
 write_xlsx(as.data.frame(simulation_results1), path = "/Users/rhode22g/Documents/sim1results_10042021.xlsx")
+write_xlsx(as.data.frame(sim1full_90neighbors), path = "/Users/rhode22g/Documents/sim1full_90neighbors.xlsx")
 ```
 
 The computation time was
