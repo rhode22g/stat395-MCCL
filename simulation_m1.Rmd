@@ -279,6 +279,11 @@ colnames(sim2_full) <- c("Bitwise", "True", paste("Rep_", seq(1:100), sep=""))
 sim2_full[,1] <- nonzeros_and_neighbors
 sim2_full[,2] <- ancestor_sim1[nonzeros_and_neighbors,]
 
+sim2full_90neighbors <- matrix(NA, nrow = (length(nonzeros_and_90neighbors)), ncol = 102)
+colnames(sim2full_90neighbors) <- c("Bitwise", "True", paste("Rep_", seq(1:100), sep=""))
+sim2full_90neighbors[,1] <- nonzeros_and_90neighbors
+sim2full_90neighbors[,2] <- ancestor_sim1[nonzeros_and_90neighbors,]
+
 # 100 replications
 comp_time2 <- proc.time()
 # 100 REPLICATIONS
@@ -293,13 +298,15 @@ for (i in 1:100){
   pairwise_estimates <- estimates_m1(L=20, q=0.01, n=100, d= descend_sample)
   
   # append estimate for this replication into the matrix
-  simulation_results2[i,] <- pairwise_estimates[1,]
-  sim2_full[,(i+2)] <- (ancestor_pair_estimation(L=20, m=1, pairs_est = pairwise_estimates, ones_est = onewise_estimates))[nonzeros_and_neighbors,1]
+  #simulation_results2[i,] <- pairwise_estimates[1,]
+  #sim2_full[,(i+2)] <- (ancestor_pair_estimation(L=20, m=1, pairs_est = pairwise_estimates, ones_est = onewise_estimates))[nonzeros_and_neighbors,1]
+  sim2full_90neighbors[,(i+2)] <- (ancestor_pair_estimation(L=20, m=1, pairs_est = pairwise_estimates, ones_est = onewise_estimates))[nonzeros_and_90neighbors,1]
 }
 comp_timefinal2 <- proc.time() - comp_time2
 
 write_xlsx(as.data.frame(simulation_results2), path = "/Users/rhode22g/Documents/sim2results.xlsx")
 write_xlsx(as.data.frame(sim2_full), path = "/Users/rhode22g/Documents/sim2full_neighbors.xlsx")
+write_xlsx(as.data.frame(sim2full_90neighbors), path = "/Users/rhode22g/Documents/sim2full_90neighbors.xlsx")
 ```
 
 The computation time for this simulation was
@@ -403,6 +410,13 @@ plot(x = full_perfmeasures2_wneighbors[,1], y = full_perfmeasures2_wneighbors[,5
 plot(x = full_perfmeasures2_wneighbors[,4], y = full_perfmeasures2_wneighbors[,5], type = "p", main= "Plot of Bias and SD (m=1, q=0.01)", sub= "(Neighbors Included)", xlab = "Bias", ylab = "SD")
 ```
 
+```{r}
+avgest_90neighbors2 <- vector(length = (length(nonzeros_and_90neighbors)))
+for (i in 1:(length(nonzeros_and_90neighbors))){
+  avgest_90neighbors2[i] <- mean(sim2full_90neighbors[i,(3:102)])
+}
+sum(avgest_90neighbors2)
+```
 
 ##SIMULATION3: L=20, n=100, q=0.05, m=1
 
@@ -416,6 +430,11 @@ sim3_full <- matrix(NA, nrow=(length(nonzeros_and_neighbors)), ncol=102)
 colnames(sim3_full) <- c("Bitwise", "True", paste("Rep_", seq(1:100), sep=""))
 sim3_full[,1] <- nonzeros_and_neighbors
 sim3_full[,2] <- ancestor_sim1[nonzeros_and_neighbors,]
+
+sim3full_90neighbors <- matrix(NA, nrow = (length(nonzeros_and_90neighbors)), ncol = 102)
+colnames(sim3full_90neighbors) <- c("Bitwise", "True", paste("Rep_", seq(1:100), sep=""))
+sim3full_90neighbors[,1] <- nonzeros_and_90neighbors
+sim3full_90neighbors[,2] <- ancestor_sim1[nonzeros_and_90neighbors,]
 
 # 100 replications
 comp_time3 <- proc.time()
@@ -431,13 +450,15 @@ for (i in 1:100){
   pairwise_estimates <- estimates_m1(L=20, q=0.05, n=100, d= descend_sample)
   
   # append estimate for this replication into the matrix
-  simulation_results3[i,] <- pairwise_estimates[1,]
-  sim3_full[,(i+2)] <- (ancestor_pair_estimation(L=20, m=1, pairs_est = pairwise_estimates, ones_est = onewise_estimates))[nonzeros_and_neighbors,1]
+  # simulation_results3[i,] <- pairwise_estimates[1,]
+  # sim3_full[,(i+2)] <- (ancestor_pair_estimation(L=20, m=1, pairs_est = pairwise_estimates, ones_est = onewise_estimates))[nonzeros_and_neighbors,1]
+  sim3full_90neighbors[,(i+2)] <- (ancestor_pair_estimation(L=20, m=1, pairs_est = pairwise_estimates, ones_est = onewise_estimates))[nonzeros_and_90neighbors,1]
 }
 comp_timefinal3 <- proc.time() - comp_time3
 
 write_xlsx(as.data.frame(simulation_results3), path = "/Users/rhode22g/Documents/sim3results.xlsx")
 write_xlsx(as.data.frame(sim3_full), path = "/Users/rhode22g/Documents/sim3full_neighbors.xlsx")
+write_xlsx(as.data.frame(sim3full_90neighbors), path = "/Users/rhode22g/Documents/sim3full_90neighbors.xlsx")
 ```
 
 The computation time for this simulation:
@@ -543,7 +564,13 @@ plot(x = full_perfmeasures3_wneighbors[,1], y = full_perfmeasures3_wneighbors[,5
 plot(x = full_perfmeasures3_wneighbors[,4], y = full_perfmeasures3_wneighbors[,5], type = "p", main= "Plot of Bias and SD (m=1, q=0.05)", sub= "(Neighbors Included)", xlab = "Bias", ylab = "SD")
 ```
 
-
+```{r}
+avgest_90neighbors3 <- vector(length = (length(nonzeros_and_90neighbors)))
+for (i in 1:(length(nonzeros_and_90neighbors))){
+  avgest_90neighbors3[i] <- mean(sim3full_90neighbors[i,(3:102)])
+}
+sum(avgest_90neighbors3)
+```
 
 ##SIMULATION4: L=20, n=100, q=0.1, m=1
 
