@@ -74,22 +74,43 @@ num_nonzero
 nonzero_bits <- which((ancestor_sim1[,1] != 0), arr.ind = TRUE)
 zero_bits <- which((ancestor_sim1[,1] == 0), arr.ind = TRUE)
 
-neighbors <- vector(length = 0)
-neighbors2 <- vector(length = 0)
-neighbors3 <- vector(length = 0)
-for (i in nonzero_bits){
+neighbors <- vector(length = 0) #sequences within a hamming distance of 1 from a true non-zero (95% match)
+neighbors2 <- vector(length = 0) #sequences within a hamming distance of 2 from a true non-zero (90% match)
+neighbors3 <- vector(length = 0) #sequences within a hamming distance of 3 from a true non-zero (85% match)
+
+# FIXED VERSION OF THIS FOR LOOP
+# iterate over every possible ancestor sequence
+for (i in 1:(dim(an_seq)[1])){
+  # calculate hamming distances b/w true non-zeroes and the current sequence
   distances <- t( apply(an_seq[nonzero_bits,], 1, FUN =  hamming.distance, y = an_seq[i,]))
-  n1 <- which(distances == 1, arr.ind = TRUE)
-  neighbors <- c(neighbors,n1)
-  n2 <- which(distances <= 2, arr.ind = TRUE)
-  neighbors2 <- c(neighbors2, n2)
-  n3 <- which(distances <= 3, arr.ind = TRUE)
-  neighbors3 <- c(neighbors3, n3)
+  
+  # iterate over the distances
+  for (j in 1:(length(nonzero_bits))){
+    # check if distance leq 1
+    if (distances[,j] <= 1){
+      # add sequence into vector if true
+      neighbors <- c(neighbors,i)
+    }
+    # check if distance leq 2
+    if (distances[,j] <= 2){
+      # add sequence into vector if true
+     neighbors2 <- c(neighbors2, i) 
+    }
+    # repeat for leq 3
+    if (distances[,j] <= 3){
+      # add sequence into vector if true
+      neighbors3 <- c(neighbors3, i)
+    }
+    n3 <- which(distances <= 3, arr.ind = TRUE)
+  }
 }
 
+# remove repeats from each vector
 unique_neighbors <- unique(neighbors)
 unique_neighbors2 <- unique(neighbors2)
 unique_neighbors3 <- unique(neighbors3)
+
+# put into increasing order and concatenate with true non-zeroes 
 nonzeros_and_neighbors <- sort(unique(c(nonzero_bits, unique_neighbors)))
 nonzeros_and_90neighbors <- sort(unique(c(nonzero_bits, unique_neighbors2)))
 nonzeros_and_85neighbors <- sort(unique(c(nonzero_bits, unique_neighbors3)))
@@ -102,10 +123,12 @@ Then, obtain the pairwise estimates for each of the 100 replications.
 # initialize matrix to store bias and SD
 simulation_results1 <- matrix(NA, nrow = 100, ncol = 19)
 colnames(simulation_results1) <- paste("site_",seq(1:19),sep="")
-sim1_full <- matrix(NA, nrow=(length(nonzeros_and_neighbors)), ncol=102)
-colnames(sim1_full) <- c("Bitwise", "True", paste("Rep_", seq(1:100), sep=""))
-sim1_full[,1] <- nonzeros_and_neighbors
-sim1_full[,2] <- ancestor_sim1[nonzeros_and_neighbors,]
+
+
+sim1_nonzerosonly <- matrix(NA, nrow=(length(nonzero_bits)), ncol=102)
+colnames(sim1_nonzerosonly) <- c("Bitwise", "True", paste("Rep_", seq(1:100), sep=""))
+sim1_nonzerosonly[,1] <- nonzero_bits
+sim1_nonzerosonly[,2] <- ancestor_sim1[nonzero_bits,]
 
 sim1full_90neighbors <- matrix(NA, nrow = (length(nonzeros_and_90neighbors)), ncol = 102)
 colnames(sim1full_90neighbors) <- c("Bitwise", "True", paste("Rep_", seq(1:100), sep=""))
@@ -168,52 +191,15 @@ for (i in 1:(2^20)){
   sim1full_all_pf[i,5] <- sd(sim1full_all[i,(3:102)])
   sim1full_all_pf[i,6] <- sim1full_all_pf[i,5] + (sim1full_all_pf[i,4])^2
 }
-```
 
-```{r}
-numnonzeros_1 <- sum(sim1full_all_pf[,3] != 0)
-numnonzeros_1
-
-sum(sim1full_all_pf[,3] >= (1e-10))
-
-nonzeroes1 <- which((sim1full_all_pf[,3]!= 0), arr.ind = TRUE)
-nearnonzeroes1 <- which((sim1full_all_pf[,3]>= (1e-10)), arr.ind = TRUE)
-
-falsenonzeros_distance <- vector(length = 0)
-for(x in nonzeroes1){
-  distances <- t( apply(an_seq[nonzero_bits,], 1, FUN =  hamming.distance, y = an_seq[x,]))
-  falsenonzeros_distance <- c(falsenonzeros_distance, distances)
-}
-
-distances1 <- unique(falsenonzeros_distance)
-distances1
-
-library(dplyr)
-summary(as.data.frame(falsenonzeros_distance))
-
-nearnonzeroes_distance <- vector(length = 0)
-for(x in nearnonzeroes1){
-  distances <- t( apply(an_seq[nonzero_bits,], 1, FUN =  hamming.distance, y = an_seq[x,]))
-  nearnonzeroes_distance <- c(nearnonzeroes_distance, distances)
-}
-neardistances1 <- unique(nearnonzeroes_distance)
-neardistances1
-summary(as.data.frame(nearnonzeroes_distance))
-
-neighbors9 <- vector(length = 0)
-for (i in nonzero_bits){
-  distances <- t( apply(an_seq[nonzero_bits,], 1, FUN =  hamming.distance, y = an_seq[i,]))
-  n1 <- which(distances <= 9, arr.ind = TRUE)
-  neighbors9 <- c(neighbors9,n1)
-}
-n9 <- unique(neighbors9)
-nonzeron9 <- sort(unique(c(nonzero_bits, n9)))
-sum <- 0
-for (x in nonzeron9){
-  # sum <- sum + sim1full_all_pf[x,3]
-  print(x)
-}
-sum
+sim1pf_nonzerosonly <- sim1full_all_pf[nonzero_bits,]
+write_xlsx(as.data.frame(sim1pf_nonzerosonly), path = "/Users/rhode22g/Documents/sim1pf_nonzerosonly.xlsx")
+sim1pf_95neighbors <- sim1full_all_pf[nonzeros_and_neighbors,]
+write_xlsx(as.data.frame(sim1pf_95neighbors), path = "/Users/rhode22g/Documents/sim1pf_95neighbors.xlsx")
+sim1pf_90neighbors <- sim1full_all_pf[nonzeros_and_90neighbors,]
+write_xlsx(as.data.frame(sim1pf_90neighbors), path = "/Users/rhode22g/Documents/sim1pf_90neighbors.xlsx")
+sim1pf_85neighbors <- sim1full_all_pf[nonzeros_and_85neighbors,]
+write_xlsx(as.data.frame(sim1pf_85neighbors), path = "/Users/rhode22g/Documents/sim1pf_85neighbors.xlsx")
 ```
 
 
@@ -350,6 +336,11 @@ colnames(sim2full_90neighbors) <- c("Bitwise", "True", paste("Rep_", seq(1:100),
 sim2full_90neighbors[,1] <- nonzeros_and_90neighbors
 sim2full_90neighbors[,2] <- ancestor_sim1[nonzeros_and_90neighbors,]
 
+sim2full_all <- matrix(NA, nrow = (2^20), ncol = 102)
+colnames(sim2full_all) <- c("Bitwise", "True", paste("Rep_", seq(1:100), sep = ""))
+sim2full_all[,1] <- c(1:(2^20))
+sim2full_all[,2] <- ancestor_sim1
+
 # 100 replications
 comp_time2 <- proc.time()
 # 100 REPLICATIONS
@@ -366,7 +357,8 @@ for (i in 1:100){
   # append estimate for this replication into the matrix
   #simulation_results2[i,] <- pairwise_estimates[1,]
   #sim2_full[,(i+2)] <- (ancestor_pair_estimation(L=20, m=1, pairs_est = pairwise_estimates, ones_est = onewise_estimates))[nonzeros_and_neighbors,1]
-  sim2full_90neighbors[,(i+2)] <- (ancestor_pair_estimation(L=20, m=1, pairs_est = pairwise_estimates, ones_est = onewise_estimates))[nonzeros_and_90neighbors,1]
+  # sim2full_90neighbors[,(i+2)] <- (ancestor_pair_estimation(L=20, m=1, pairs_est = pairwise_estimates, ones_est = onewise_estimates))[nonzeros_and_90neighbors,1]
+  sim2full_all[,(i+2)] <- (ancestor_pair_estimation(L=20, m=1, pairs_est = pairwise_estimates, ones_est = onewise_estimates))
 }
 comp_timefinal2 <- proc.time() - comp_time2
 
@@ -380,6 +372,30 @@ The computation time for this simulation was
 ```{r}
 comp_timefinal2[3]
 ```
+
+```{r}
+sim2full_all_pf <- matrix(NA, nrow = (2^20), ncol = 6)
+colnames(sim2full_all_pf) <- c("Bitwise", "True", "Avg Est", "Bias", "SD", "MSE")
+
+sim2full_all_pf[,1:2] <- sim2full_all[,1:2]
+for (i in 1:(2^20)){
+  sim2full_all_pf[i,3] <- mean(sim2full_all[i,(3:102)])
+  sim2full_all_pf[i,4] <- mean(sim2full_all[i,(3:102)]) - sim2full_all[i,2]
+  sim2full_all_pf[i,5] <- sd(sim2full_all[i,(3:102)])
+  sim2full_all_pf[i,6] <- sim2full_all_pf[i,5] + (sim2full_all_pf[i,4])^2
+}
+
+sim2pf_nonzerosonly <- sim2full_all_pf[nonzero_bits,]
+write_xlsx(as.data.frame(sim2pf_nonzerosonly), path = "/Users/rhode22g/Documents/sim2pf_nonzerosonly.xlsx")
+sim2pf_95neighbors <- sim2full_all_pf[nonzeros_and_neighbors,]
+write_xlsx(as.data.frame(sim2pf_95neighbors), path = "/Users/rhode22g/Documents/sim2pf_95neighbors.xlsx")
+sim2pf_90neighbors <- sim2full_all_pf[nonzeros_and_90neighbors,]
+write_xlsx(as.data.frame(sim2pf_90neighbors), path = "/Users/rhode22g/Documents/sim2pf_90neighbors.xlsx")
+sim2pf_85neighbors <- sim2full_all_pf[nonzeros_and_85neighbors,]
+write_xlsx(as.data.frame(sim2pf_85neighbors), path = "/Users/rhode22g/Documents/sim2pf_85neighbors.xlsx")
+```
+
+
 
 Calculate the bias for each $\phi_s$ for $s \in \{1,...,19\}$
 
