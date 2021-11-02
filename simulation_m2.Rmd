@@ -14,6 +14,8 @@ Load packages and files:
 # LIBRARY FUNCTION CALLS
 library(ggplot2)
 library(sfsmisc)
+library(writexl)
+library(AlgebraicHaploPackage)
 
 # SOURCE FUNCTION CALLS
 source("reading_data.R")
@@ -224,12 +226,17 @@ write_xlsx(as.data.frame(simulation_results5_phi1), path = "/Users/rhode22g/Docu
 Then, obtain the pairwise estimates for each of the 100 replications.
 
 ```{r}
-# initialize matrix to store bias and SD
+# initialize matrix to store joint estimates for the free parameters
 simulation_results6_phi0 <- matrix(NA, nrow = 100, ncol = 18)
 colnames(simulation_results6_phi0) <- paste("site_",seq(1:18),sep="")
 simulation_results6_phi1 <- matrix(NA, nrow = 100, ncol = 18)
 colnames(simulation_results6_phi1) <- paste("site_",seq(1:18),sep="")
-sim6_full <- vector(length = 100)
+
+# initialize matrix to store joint estimates for all possible sequences
+sim6_full <- matrix(NA, nrow = (2^20), ncol = 102)
+colnames(sim6_full) <- c("Bitwise", "True", paste("rep_", seq(1:100), sep = ""))
+sim6_full[,1] <- c(1:(2^20))
+sim6_full[,2] <- ancestor_sim1
 
 comp_time6 <- proc.time()
 # 100 REPLICATIONS
@@ -246,7 +253,7 @@ for (i in 1:100){
   # append estimate for this replication into the matrix
   simulation_results6_phi0[i,] <- threewise_estimates[1,]
   simulation_results6_phi1[i,] <- threewise_estimates[3,]
-  sim6_full[i] <- prod(threewise_estimates[1,]) / prod(pairwise_estimates[1, 2:18])
+  sim6_full[,(i+2)] <- ancestor_three_estimation(L = 20, m = 2, three_est = threewise_estimates, pairs_est = pairwise_estimates)
 }
 comp_timefinal6 <- proc.time() - comp_time6
 ```
@@ -321,11 +328,44 @@ ggplot() +
 Full bias & sd:
 
 ```{r}
-avg_full6 <- mean(sim6_full)
-bias_full6 <- mean(sim6_full) - ancestor_sim1[1,1]
-sd_full6 <- sd(sim6_full)
-c(avg_full6, bias_full6, sd_full6)
+sim6_full_pf <- matrix(NA, nrow = (2^20), ncol = 6)
+colnames(sim6_full_pf) <- c("Bitwise", "True", "Avg Est", "Bias", "SD", "MSE")
+
+sim6_full_pf[,(1:2)] <- sim6_full[,(1:2)]
+for (i in 1:(2^20)){
+  sim6_full_pf[i,3] <- mean(sim6_full[i,(3:102)])
+  sim6_full_pf[i,4] <- sim6_full_pf[i,3] - sim6_full_pf[i,2] # mean - true
+  sim6_full_pf[i,5] <- sd(sim6_full[i,(3:102)])
+  sim6_full_pf[i,6] <- sim6_full_pf[i,5] + sim6_full_pf[i,4]^2 #sd + bias squared
+}
 ```
+
+```{r}
+sum(sim6_full_pf[,3] != 0)
+sum(sim6_full_pf[,3] >= (1e-10))
+sum(sim6_full_pf[,3] >= (1e-5))
+```
+
+```{r}
+sum(sim6_full_pf[nonzero_bits, 3])
+sum(sim6_full_pf[nonzeros_and_neighbors, 3])
+sum(sim6_full_pf[nonzeros_and_90neighbors, 3])
+sum(sim6_full_pf[nonzeros_and_85neighbors, 3])
+```
+
+Writing to excel files:
+
+```{r}
+write_xlsx(as.data.frame(simulation_results6_phi0), path = "/Users/rhode22g/Documents/sim6_marg_0.xlsx")
+write_xlsx(as.data.frame(simulation_results6_phi1), path = "/Users/rhode22g/Documents/sim6_marg_1.xlsx")
+write_xlsx(as.data.frame(perf_measures_sim6), path = "/Users/rhode22g/Documents/sim6_marg_pf.xlsx")
+
+sim6_full_nonzeros <- sim6_full_pf[nonzero_bits,]
+sim6_full_nonzerosneighbors <- sim6_full_pf[nonzeros_and_neighbors,]
+write_xlsx(as.data.frame(sim6_full_nonzeros), path = "/Users/rhode22g/Documents/sim6_joint_nonzero.xlsx")
+write_xlsx(as.data.frame(sim6_full_nonzerosneighbors), path = "/Users/rhode22g/Documents/sim6_joint_nonzeroneighbors.xlsx")
+```
+
 
 ##SIMULATION7: L=20, n=100, q=0.05, m=2
 
