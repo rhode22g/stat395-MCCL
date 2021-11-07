@@ -181,14 +181,6 @@ ggplot() +
   ylab("Probability")
 ```
 
-Full bias & sd:
-
-```{r}
-avg_full5 <- mean(sim5_full)
-bias_full5 <- mean(sim5_full) - ancestor_sim1[1,1]
-sd_full5 <- sd(sim5_full)
-c(avg_full5, bias_full5, sd_full5)
-```
 
 
 ```{r}
@@ -212,14 +204,22 @@ sum(sim5_full_pf[nonzeros_and_85neighbors, 3])
 ```
 
 
-```{r}
-library(writexl)
+Writing to excel files:
 
+```{r}
 write_xlsx(as.data.frame(simulation_results5_phi0), path = "/Users/rhode22g/Documents/sim5_marg_0.xlsx")
 write_xlsx(as.data.frame(simulation_results5_phi1), path = "/Users/rhode22g/Documents/sim5_marg_1.xlsx")
-# write_xlsx(as.data.frame(sim5_full_pf), path = "/Users/rhode22g/Documents/sim5_full_pf.xlsx")
-```
+write_xlsx(as.data.frame(perf_measures_sim5), path = "/Users/rhode22g/Documents/sim5_marg_pf.xlsx")
 
+sim5_full_nonzeros <- sim5_full_pf[nonzero_bits,]
+sim5_full_nonzerosneighbors <- sim5_full_pf[nonzeros_and_neighbors,]
+sim5_full_nonzero90neighbors <- sim5_full_pf[nonzeros_and_90neighbors,]
+sim5_full_nonzero85neighbors <- sim5_full_pf[nonzeros_and_85neighbors,]
+write_xlsx(as.data.frame(sim5_full_nonzeros), path = "/Users/rhode22g/Documents/sim5_joint_nonzero.xlsx")
+write_xlsx(as.data.frame(sim5_full_nonzerosneighbors), path = "/Users/rhode22g/Documents/sim5_joint_nonzeroneighbors.xlsx")
+write_xlsx(as.data.frame(sim5_full_nonzero90neighbors), path = "/Users/rhode22g/Documents/sim5_joint_nonzero90neighbors.xlsx")
+write_xlsx(as.data.frame(sim5_full_nonzero85neighbors), path = "/Users/rhode22g/Documents/sim5_joint_nonzero85neighbors.xlsx")
+```
 
 ##SIMULATION6: L=20, n=100, q=0.01, m=2
 
@@ -362,8 +362,12 @@ write_xlsx(as.data.frame(perf_measures_sim6), path = "/Users/rhode22g/Documents/
 
 sim6_full_nonzeros <- sim6_full_pf[nonzero_bits,]
 sim6_full_nonzerosneighbors <- sim6_full_pf[nonzeros_and_neighbors,]
+sim6_full_nonzero90neighbors <- sim6_full_pf[nonzeros_and_90neighbors,]
+sim6_full_nonzero85neighbors <- sim6_full_pf[nonzeros_and_85neighbors,]
 write_xlsx(as.data.frame(sim6_full_nonzeros), path = "/Users/rhode22g/Documents/sim6_joint_nonzero.xlsx")
 write_xlsx(as.data.frame(sim6_full_nonzerosneighbors), path = "/Users/rhode22g/Documents/sim6_joint_nonzeroneighbors.xlsx")
+write_xlsx(as.data.frame(sim6_full_nonzero90neighbors), path = "/Users/rhode22g/Documents/sim6_joint_nonzero90neighbors.xlsx")
+write_xlsx(as.data.frame(sim6_full_nonzero85neighbors), path = "/Users/rhode22g/Documents/sim6_joint_nonzero85neighbors.xlsx")
 ```
 
 
@@ -511,8 +515,12 @@ write_xlsx(as.data.frame(perf_measures_sim7), path = "/Users/rhode22g/Documents/
 
 sim7_full_nonzeros <- sim7_full_pf[nonzero_bits,]
 sim7_full_nonzerosneighbors <- sim7_full_pf[nonzeros_and_neighbors,]
+sim7_full_nonzero90neighbor <- sim7_full_pf[nonzeros_and_90neighbors,]
+sim7_full_nonzero85neighbor <- sim7_full_pf[nonzeros_and_85neighbors,]
 write_xlsx(as.data.frame(sim7_full_nonzeros), path = "/Users/rhode22g/Documents/sim7_joint_nonzero.xlsx")
 write_xlsx(as.data.frame(sim7_full_nonzerosneighbors), path = "/Users/rhode22g/Documents/sim7_joint_nonzeroneighbors.xlsx")
+write_xlsx(as.data.frame(sim7_full_nonzero90neighbor), path = "/Users/rhode22g/Documents/sim7_joint_nonzero90neighbors.xlsx")
+write_xlsx(as.data.frame(sim7_full_nonzero85neighbor), path = "/Users/rhode22g/Documents/sim7_joint_nonzero85neighbors.xlsx")
 ```
 
 ##SIMULATION8: L=20, n=100, q=0.1, m=2
@@ -520,12 +528,17 @@ write_xlsx(as.data.frame(sim7_full_nonzerosneighbors), path = "/Users/rhode22g/D
 Then, obtain the pairwise estimates for each of the 100 replications.
 
 ```{r}
-# initialize matrix to store bias and SD
+# initialize matrix to store joint estimates for the two free parameters
 simulation_results8_phi0 <- matrix(NA, nrow = 100, ncol = 18)
 colnames(simulation_results8_phi0) <- paste("site_",seq(1:18),sep="")
 simulation_results8_phi1 <- matrix(NA, nrow = 100, ncol = 18)
 colnames(simulation_results8_phi1) <- paste("site_",seq(1:18),sep="")
-sim8_full <- vector(length = 100)
+
+# initialize matrix to store the marginal estimates for all possible sequences
+sim8_full <- matrix(NA, nrow = (2^20), ncol=102)
+colnames(sim8_full) <- c("Bitwise", "True", paste("rep_", seq(1:100), sep=""))
+sim8_full[,1] <- c(1:(2^20))
+sim8_full[,2] <- ancestor_sim1
 
 comp_time8 <- proc.time()
 # 100 REPLICATIONS
@@ -542,7 +555,7 @@ for (i in 1:100){
   # append estimate for this replication into the matrix
   simulation_results8_phi0[i,] <- threewise_estimates[1,]
   simulation_results8_phi1[i,] <- threewise_estimates[3,]
-  sim8_full[i] <- prod(threewise_estimates[1,]) / prod(pairwise_estimates[1, 2:18])
+  sim8_full[,(i+2)] <- ancestor_three_estimation(L=20, m=2, three_est = threewise_estimates, pairs_est = pairwise_estimates)
 }
 comp_timefinal8 <- proc.time() - comp_time8
 ```
@@ -614,11 +627,46 @@ ggplot() +
   ylab("Probability")
 ```
 
-Full bias & sd:
+```{r}
+sim8_full_pf <- matrix(NA, nrow = (2^20), ncol = 6)
+colnames(sim8_full_pf) <- c("Bitwise", "True", "Avg Est", "Bias", "SD", "MSE")
+
+sim8_full_pf[,(1:2)] <- sim8_full[,(1:2)]
+for (i in 1:(2^20)){
+  sim8_full_pf[i,3] <- mean(sim8_full[i,(3:102)])
+  sim8_full_pf[i,4] <- sim8_full_pf[i,3] - sim8_full_pf[i,2] # mean - true
+  sim8_full_pf[i,5] <- sd(sim8_full[i,(3:102)])
+  sim8_full_pf[i,6] <- sim8_full_pf[i,5] + sim8_full_pf[i,4]^2 #sd + bias squared
+}
+```
 
 ```{r}
-avg_full8 <- mean(sim8_full)
-bias_full8 <- mean(sim8_full) - ancestor_sim1[1,1]
-sd_full8 <- sd(sim8_full)
-c(avg_full8, bias_full8, sd_full8)
+sum(sim8_full_pf[,3] != 0)
+sum(sim8_full_pf[,3] >= (1e-10))
+sum(sim8_full_pf[,3] >= (1e-5))
+
+```
+
+```{r}
+sum(sim8_full_pf[nonzero_bits, 3])
+sum(sim8_full_pf[nonzeros_and_neighbors, 3])
+sum(sim8_full_pf[nonzeros_and_90neighbors, 3])
+sum(sim8_full_pf[nonzeros_and_85neighbors, 3])
+```
+
+Writing to excel files:
+
+```{r}
+write_xlsx(as.data.frame(simulation_results8_phi0), path = "/Users/rhode22g/Documents/sim8_marg_0.xlsx")
+write_xlsx(as.data.frame(simulation_results8_phi1), path = "/Users/rhode22g/Documents/sim8_marg_1.xlsx")
+write_xlsx(as.data.frame(perf_measures_sim8), path = "/Users/rhode22g/Documents/sim8_marg_pf.xlsx")
+
+sim8_full_nonzeros <- sim8_full_pf[nonzero_bits,]
+sim8_full_nonzerosneighbors <- sim8_full_pf[nonzeros_and_neighbors,]
+sim8_full_nonzero90neighbor <- sim8_full_pf[nonzeros_and_90neighbors,]
+sim8_full_nonzero85neighbor <- sim8_full_pf[nonzeros_and_85neighbors,]
+write_xlsx(as.data.frame(sim8_full_nonzeros), path = "/Users/rhode22g/Documents/sim8_joint_nonzero.xlsx")
+write_xlsx(as.data.frame(sim8_full_nonzerosneighbors), path = "/Users/rhode22g/Documents/sim8_joint_nonzeroneighbors.xlsx")
+write_xlsx(as.data.frame(sim8_full_nonzero90neighbor), path = "/Users/rhode22g/Documents/sim8_joint_nonzero90neighbors.xlsx")
+write_xlsx(as.data.frame(sim8_full_nonzero85neighbor), path = "/Users/rhode22g/Documents/sim8_joint_nonzero85neighbors.xlsx")
 ```
