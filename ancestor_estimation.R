@@ -10,13 +10,16 @@ library(AlgebraicHaploPackage)
 
 ###############
 # SET TEST VALUES
-m <- 2
-L <- 6
-test_ancestor <- ancestor(L=L, hapmap_binary)
-test_example <- descendent_sample(L=L, q=0.1, n=5, seed=7, hapmap_binary)
-test_onewise <- estimates_m0(test_example, L=L, n=5)
-test_pairwise <- estimates_m1(L=L, q=0.1, n=5, d=test_example)
-test_threewise <- estimates_m2(L=L, q=0.1, n=5, descend = test_example)
+# m <- 3
+# L <- 15
+# test_ancestor <- ancestor(L=L, hapmap_binary)
+# test_example <- descendent_sample(L=L, q=0.1, n=5, seed=7, hapmap_binary)
+# test_onewise <- estimates_m0(test_example, L=L, n=5)
+# test_pairwise <- estimates_m1(L=L, q=0.1, n=5, d=test_example)
+# test_threewise <- estimates_m2(L=L, q=0.1, n=5, descend = test_example)
+# test_fourwise <- estimates_m3(L = L, q = 0.1, n=5, d = test_example)
+###############
+
 
 #############
 # SCRATCH WORK FOR PAIRWISE
@@ -164,6 +167,117 @@ ancestor_three_estimation <- function(L, m, three_est, pairs_est){
 # an_est <- as.matrix(an_est)
 
 ###################
+
+
+#####################
+# FROM FOURWISE ####
+####################
+ancestor_four_estimation <- function(L, m, four_est, three_est){
+  # initialize matrix for needed fourwise estimates
+  fours_needed <- matrix(NA, nrow = (2^L), ncol = (L-m))
+  
+  # fill matrix with needed fourwise estimates
+  for (i in 1:(L-m)){
+    fours_needed[,i] <- c(rep(four_est[1,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[2,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[3,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[4,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[5,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[6,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[7,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[8,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[9,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[10,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[11,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[12,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[13,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[14,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[15,i], times = (1/2^(m+i))*2^L),
+                         rep(four_est[16,i], times = (1/2^(m+i))*2^L))
+  }
+  
+  # initialize matrix for needed threewise estimates
+  threes_needed <- matrix(NA, nrow = (2^L), ncol = (L-m-1))
+  
+  # fill matrix with needed threewise estimates
+  for (j in 1:(L-m-1)){
+    threes_needed[,j] <- c(rep(three_est[1, (j+1)], times = (1/2^(m+j))*2^L),
+                          rep(three_est[2, (j+1)], times = (1/2^(m+j))*2^L),
+                          rep(three_est[3, (j+1)], times = (1/2^(m+j))*2^L),
+                          rep(three_est[4, (j+1)], times = (1/2^(m+j))*2^L),
+                          rep(three_est[5, (j+1)], times = (1/2^(m+j))*2^L),
+                          rep(three_est[6, (j+1)], times = (1/2^(m+j))*2^L),
+                          rep(three_est[7, (j+1)], times = (1/2^(m+j))*2^L),
+                          rep(three_est[8, (j+1)], times = (1/2^(m+j))*2^L))
+  }
+  
+  # concatenate into one matrix & take inverse of threewise
+  to_mult <- matrix(NA, nrow = (2^L), ncol = (2*L - 2*m - 1))
+  to_mult[,(1:(L-m))] <- fours_needed
+  to_mult[,((L-m+1):(2*L - 2*m - 1))] <- 1/(threes_needed)
+  
+  # calculate estimates
+  an_ests <- matrix(NA, nrow = (2^L), ncol = 1)
+  an_ests <- apply(to_mult, 1, prod)
+  
+  # replace NA's with zeros
+  an_ests[is.na(an_ests)] <- 0
+  
+  # return matrix of estimates
+  an_ests <- as.matrix(an_ests)
+  return(an_ests)
+}
+#####################
+
+
+####################
+# SCRATCH WORK FOR FOURWISE
+# four_needed <- matrix(NA, nrow = (2^L), ncol = (L-m))
+# for (i in 1:(L-m)){
+#   four_needed[,i] <- c(rep(test_fourwise[1,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[2,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[3,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[4,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[5,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[6,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[7,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[8,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[9,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[10,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[11,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[12,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[13,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[14,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[15,i], times = (1/2^(m+i))*2^L),
+#                        rep(test_fourwise[16,i], times = (1/2^(m+i))*2^L))
+# }
+# 
+# three_needed <- matrix(NA, nrow = (2^L), ncol = (L-m-1))
+# for (j in 1:(L-m-1)){
+#   three_needed[,j] <- c(rep(test_threewise[1, (j+1)], times = (1/2^(m+j))*2^L),
+#                         rep(test_threewise[2, (j+1)], times = (1/2^(m+j))*2^L),
+#                         rep(test_threewise[3, (j+1)], times = (1/2^(m+j))*2^L),
+#                         rep(test_threewise[4, (j+1)], times = (1/2^(m+j))*2^L),
+#                         rep(test_threewise[5, (j+1)], times = (1/2^(m+j))*2^L),
+#                         rep(test_threewise[6, (j+1)], times = (1/2^(m+j))*2^L),
+#                         rep(test_threewise[7, (j+1)], times = (1/2^(m+j))*2^L),
+#                         rep(test_threewise[8, (j+1)], times = (1/2^(m+j))*2^L))
+# }
+# 
+# tomult <- matrix(NA, nrow = (2^L), ncol = (2*L - 2*m - 1))
+# tomult[,(1:(L-m))] <- four_needed
+# tomult[,((L-m+1):(2*L - 2*m - 1))] <- 1/(three_needed)
+# 
+# estimates <- matrix(NA, nrow = (2^L), ncol = 1)
+# estimates <- apply(tomult, 1, prod)
+# estimates[is.na(estimates)] <- 0
+# 
+# estimates <- as.matrix(estimates)
+#######################
+
+####################
 # test function performance
-ancestor_test <- ancestor_pair_estimation(L=L, m=m, pairs_est = test_pairwise, ones_est = test_onewise)
-ancestor_test_2 <- ancestor_three_estimation(L = L, m=2, three_est = test_threewise, pairs_est = test_pairwise)
+# ancestor_test <- ancestor_pair_estimation(L=L, m=m, pairs_est = test_pairwise, ones_est = test_onewise)
+# ancestor_test_2 <- ancestor_three_estimation(L = L, m=2, three_est = test_threewise, pairs_est = test_pairwise)
+# ancestor_test_3 <- ancestor_four_estimation(L = L, m = 3, four_est = test_fourwise, three_est = test_threewise)
+###################

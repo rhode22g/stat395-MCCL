@@ -14,6 +14,8 @@ Load packages and files:
 # LIBRARY FUNCTION CALLS
 library(ggplot2)
 library(sfsmisc)
+library(AlgebraicHaploPackage)
+library(writexl)
 
 # SOURCE FUNCTION CALLS
 source("reading_data.R")
@@ -108,7 +110,7 @@ true_phi11
 Then, obtain the pairwise estimates for each of the 100 replications.
 
 ```{r}
-# initialize matrix to store bias and SD
+# initialize matrix to store marginal estimates for the four free parameters
 simulation_results9_phi00 <- matrix(NA, nrow = 100, ncol = 17)
 colnames(simulation_results9_phi00) <- paste("site_",seq(1:17),sep="")
 simulation_results9_phi01 <- matrix(NA, nrow = 100, ncol = 17)
@@ -117,13 +119,15 @@ simulation_results9_phi10 <- matrix(NA, nrow = 100, ncol = 17)
 colnames(simulation_results9_phi10) <- paste("site_",seq(1:17),sep="")
 simulation_results9_phi11 <- matrix(NA, nrow = 100, ncol = 17)
 colnames(simulation_results9_phi11) <- paste("site_",seq(1:17),sep="")
-# sim9_full <- vector(length = 100)
+
+# initialize matrix to store joint estimates on all possible sequences
+sim9_full <- matrix(NA, nrow = (2^20), ncol = 102)
+sim9_full[,1] <- c(1:(2^20))
+sim9_full[,2] <- ancestor_sim1
 
 comp_time9 <- proc.time()
 # 100 REPLICATIONS
 for (i in 1:100){
-  # print("seed:")
-  # print(i)
   # find descendant sample using index as the seed
   descend_sample <- descendent_sample(L=20, q=0.005, n=100, seed = i, hapmap = hapmap_binary)
 
@@ -138,7 +142,7 @@ for (i in 1:100){
   simulation_results9_phi01[i,] <- fourwise_estimates[3,]
   simulation_results9_phi10[i,] <- fourwise_estimates[5,]
   simulation_results9_phi11[i,] <- fourwise_estimates[7,]
-  # sim9_full[i] <- prod(fourwise_estimates[1,]) / prod(threewise_estimates[1, 2:17])
+  sim9_full[,(i+2)] <- ancestor_four_estimation(L = 20, m = 3, four_est = fourwise_estimates, three_est = threewise_estimates)
 }
 comp_timefinal9 <- proc.time() - comp_time9
 ```
@@ -240,6 +244,44 @@ ggplot() +
   ylab("Probability")
 ```
 
+```{r}
+sim9_full_pf <- matrix(NA, nrow = (2^20), ncol = 6)
+colnames(sim9_full_pf) <- c("Bitwise", "True", "Avg Est", "Bias", "SD", "MSE")
+
+sim9_full_pf[,(1:2)] <- sim9_full[,(1:2)]
+for (i in 1:(2^20)){
+  sim9_full_pf[i,3] <- mean(sim9_full[i,(3:102)])
+  sim9_full_pf[i,4] <- sim9_full_pf[i,3] - sim9_full_pf[i,2] # mean - true
+  sim9_full_pf[i,5] <- sd(sim9_full[i,(3:102)])
+  sim9_full_pf[i,6] <- sim9_full_pf[i,5] + sim9_full_pf[i,4]^2 #sd + bias squared
+}
+```
+
+```{r}
+sum(sim9_full_pf[nonzero_bits, 3])
+sum(sim9_full_pf[nonzeros_and_neighbors, 3])
+sum(sim9_full_pf[nonzeros_and_90neighbors, 3])
+sum(sim9_full_pf[nonzeros_and_85neighbors, 3])
+```
+
+Writing to excel files:
+
+```{r}
+write_xlsx(as.data.frame(simulation_results9_phi00), path = "/Users/rhode22g/Documents/sim9_marg_00.xlsx")
+write_xlsx(as.data.frame(simulation_results9_phi01), path = "/Users/rhode22g/Documents/sim9_marg_01.xlsx")
+write_xlsx(as.data.frame(simulation_results9_phi10), path = "/Users/rhode22g/Documents/sim9_marg_10.xlsx")
+write_xlsx(as.data.frame(simulation_results9_phi11), path = "/Users/rhode22g/Documents/sim9_marg_11.xlsx")
+write_xlsx(as.data.frame(perf_measures_sim9), path = "/Users/rhode22g/Documents/sim9_marg_pf.xlsx")
+
+sim9_full_nonzeros <- sim9_full_pf[nonzero_bits,]
+sim9_full_nonzerosneighbors <- sim9_full_pf[nonzeros_and_neighbors,]
+sim9_full_nonzero90neighbors <- sim9_full_pf[nonzeros_and_90neighbors,]
+sim9_full_nonzero85neighbors <- sim9_full_pf[nonzeros_and_85neighbors,]
+write_xlsx(as.data.frame(sim9_full_nonzeros), path = "/Users/rhode22g/Documents/sim9_joint_nonzero.xlsx")
+write_xlsx(as.data.frame(sim9_full_nonzerosneighbors), path = "/Users/rhode22g/Documents/sim9_joint_nonzeroneighbors.xlsx")
+write_xlsx(as.data.frame(sim9_full_nonzero90neighbors), path = "/Users/rhode22g/Documents/sim9_joint_nonzero90neighbors.xlsx")
+write_xlsx(as.data.frame(sim9_full_nonzero85neighbors), path = "/Users/rhode22g/Documents/sim9_joint_nonzero85neighbors.xlsx")
+```
 
 
 ##SIMULATION10: L=20, n=100, q=0.01, m=3
