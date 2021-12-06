@@ -1,0 +1,177 @@
+---
+title: "Fourwise Simulation, version 2"
+author: "grace"
+date: "12/6/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## library calls
+
+```{r}
+library(ggplot2)
+library(sfsmisc)
+library(writexl)
+library(AlgebraicHaploPackage)
+library(e1071)
+```
+
+## Fourwise Simulations
+
+For the fourwise simulaions, there are four simulations total:
+
+- Simulation 9: m = 3, L = 20, n = 100, N = 100, q = 0.005
+
+- Simulation 10: m = 3, L = 20, n = 100, N = 100, q = 0.01
+
+- Simulation 11: m = 3, L = 20, n = 100, N = 100, q = 0.05
+
+- Simulation 12: m = 3, L = 20, n = 100, N = 100, q = 0.1
+
+
+
+## Needed reference values
+
+True ancestor distribution:
+
+```{r}
+# matrix of true probabilities
+ancestor_true <- ancestor(L = 20, hapmap_data = hapmap_binary) # this should be the same as ancestor_sim1
+```
+
+```{r}
+# matrix of all possible ancestor sequences for length of 20
+anseq <- matrix(c(0:(2^(20)-1)), ncol=1)
+anseq <- t( apply(anseq,1,digitsBase, base=2, ndigits=20) ) 
+```
+
+
+Identify true non-zero sequences and their neighbors
+
+```{r}
+sum(ancestor_true[,1] != 0) # this should be 91 sequences
+
+nonzero_idx <- which(ancestor_true[,1] != 0, arr.ind = TRUE) # indices of the true non-zero sequences
+
+nonzero_95n_idx <- vector(length = 0) # vector to store indices of 95% neighbors
+nonzero_90n_idx <- vector(length = 0) # vector to store indices of 90% neighbors
+nonzero_85n_idx <- vector(length = 0) # vector to store indices of 85% neighbors
+
+# iterate over every possible ancestor sequence
+for (i in 1:(dim(anseq)[1])){
+  # calculate hamming distances b/w true non-zeroes and the current sequence
+  distances <- t( apply(anseq[nonzero_idx,], 1, FUN =  hamming.distance, y = anseq[i,]))
+  
+  # iterate over the distances
+  for (j in 1:(length(nonzero_idx))){
+    # check if distance leq 1
+    if (distances[,j] <= 1){
+      # add sequence into vector if true
+      nonzero_95n_idx <- c(nonzero_95n_idx,i)
+    }
+    # check if distance leq 2
+    if (distances[,j] <= 2){
+      # add sequence into vector if true
+     nonzero_90n_idx <- c(nonzero_90n_idx, i) 
+    }
+    # repeat for leq 3
+    if (distances[,j] <= 3){
+      # add sequence into vector if true
+      nonzero_85n_idx <- c(nonzero_85n_idx, i)
+    }
+  }
+}
+
+nonzero_95n_idx <- sort(unique(nonzero_95n_idx)) # final vector of indices of the nonzero sequences and their 95% neighbors
+nonzero_90n_idx <- sort(unique(nonzero_90n_idx)) # final vector of indices of the nonzero sequences and their 90% neighbors
+nonzero_85n_idx <- sort(unique(nonzero_85n_idx)) # final vector of indices of the nonzero sequences and their 85% neighbors
+```
+
+
+### SIMULATION 9:
+
+```{r}
+# marginal estimates for phi_s(0,0,0,0)
+simulation9_v2_phi00 <- matrix(NA, ncol = 102, nrow = 17)
+simulation9_v2_phi00[,1] <- c(1:17)
+simulation9_v2_phi00[,2] <- true_phi00
+colnames(simulation9_v2_phi00) <- c("Site", "True", paste("rep_", seq(1:100), sep = ""))
+
+# marginal estimates for phi_s(0,0,1,0)
+simulation9_v2_phi01 <- matrix(NA, ncol = 102, nrow = 17)
+simulation9_v2_phi01[,1] <- c(1:17)
+simulation9_v2_phi01[,2] <- true_phi01
+colnames(simulation9_v2_phi01) <- c("Site", "True", paste("rep_", seq(1:100), sep = ""))
+
+# marginal estimates for phi_s(0,1,0,0)
+simulation9_v2_phi10 <- matrix(NA, ncol = 102, nrow = 17)
+simulation9_v2_phi10[,1] <- c(1:17)
+simulation9_v2_phi10[,2] <- true_phi10
+colnames(simulation9_v2_phi10) <- c("Site", "True", paste("rep_", seq(1:100), sep = ""))
+
+# marginal estimates for phi_s(0,1,1,0)
+simulation9_v2_phi11 <- matrix(NA, ncol = 102, nrow = 17)
+simulation9_v2_phi11[,1] <- c(1:17)
+simulation9_v2_phi11[,2] <- true_phi11
+colnames(simulation9_v2_phi11) <- c("Site", "True", paste("rep_", seq(1:100), sep = ""))
+
+# joint estimates for all possible sequences
+simulation9_v2_joint <- matrix(NA, ncol = 102, nrow = (2^20))
+simulation9_v2_joint[,1] <- c(1:(2^20))
+simulation9_v2_joint[,2] <- ancestor_true
+colnames(simulation9_v2_joint) <- c("Bit + 1", "True", paste("rep_", seq(1:100), sep = ""))
+
+# 100 replications
+comptime9 <- proc.time()
+for (j in 1:100){
+  # decendant sample
+  descendants <- descendent_sample(L = 20, q = 0.005, n = 100, seed = j, hapmap = hapmap_binary)
+  
+  # threewise estimates
+  threewise <- estimates_m2(L = 20, q = 0.005, n = 100, descend = descendants)
+  
+  # fourwise estimates
+  fourwise <- estimates_m3(L = 20, q = 0.005, n = 100, d = descendants)
+  
+  # store fourwise estimates
+  simulation9_v2_phi00[,(j+2)] <- fourwise[1,]
+  simulation9_v2_phi01[,(j+2)] <- fourwise[3,]
+  simulation9_v2_phi10[,(j+2)] <- fourwise[5,]
+  simulation9_v2_phi11[,(j+2)] <- fourwise[7,]
+  
+  # joint MC order 3 reconstruction
+  joint <- ancestor_four_estimation(L = 20, m = 3, four_est = fourwise, three_est = threewise)
+  
+  # store joint estimates
+  simulation9_v2_joint[,(j+2)] <- joint
+}
+comptime9_after <- proc.time() - comptime9
+```
+
+## Joint performance measures
+
+```{r}
+simulation9_v2_joint_pf <- matrix(NA, nrow = (2^20), ncol = 6)
+colnames(simulation9_v2_joint_pf) <- c("Bit + 1", "True", "Mean Est", "SD", "Bias", "MSE")
+
+simulation9_v2_joint_pf[,(1:2)] <- simulation9_v2_joint[,(1:2)]
+for(g in 1:(2^20)){
+  simulation9_v2_joint_pf[g,3] <- mean(simulation9_v2_joint[g,(3:102)]) # mean estimates for sequence g
+  simulation9_v2_joint_pf[g,4] <- sd(simulation9_v2_joint[g,(3:102)]) # sd of estimates for sequence g
+  simulation9_v2_joint_pf[g,5] <- mean(simulation9_v2_joint[g,(3:102)]) - ancestor_true[g,1] # bias of estimates for sequence g
+  simulation9_v2_joint_pf[g,6] <- (simulation9_v2_joint_pf[g,5])^2 + simulation9_v2_joint_pf[g,4] # mean squared error
+}
+```
+
+```{r}
+sum(simulation9_v2_joint_pf[nonzero_idx,3])
+
+sim9_nonzeros <- simulation9_v2_joint_pf[nonzero_bits,]
+```
+
+## read to excel files
+
+
