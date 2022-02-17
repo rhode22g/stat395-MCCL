@@ -1,0 +1,802 @@
+---
+title: "simulation results"
+author: "Grace Rhodes"
+date: "10/6/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(writexl)
+library(ggplot2)
+library(ggforce)
+library(sfsmisc)
+library(xtable)
+library(dplyr)
+library(knitr)
+library(grid)
+library(gridExtra)
+```
+
+### Pairwise Data
+
+```{r}
+## load results for simulation 1
+
+# performance measures for the marginal estimates
+perfmeasures1 <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/perfmeasures1.xlsx"))
+
+# performance measures for the joint on true non-zeros only
+fullperfmeas1_nonzero <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim1pf_nonzerosonly.xlsx"))
+
+# performance measures for the joint on true non-zeros and 95% neighbors
+fullperfmeas1_neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim1pf_95neighbors.xlsx"))
+
+# performance measures for the joint on true non-zeros and 90% neighbors
+fullperfmeas1_90neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim1pf_90neighbors.xlsx"))
+
+# performance measures for the joint on true non-zeros and 85% neighbors
+fullperfmeas1_85neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim1pf_85neighbors.xlsx"))
+```
+
+```{r}
+## load results for simulation 2
+
+# performance measures for the marginal estimates
+perfmeasures2 <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/perfmeasures2.xlsx"))
+
+# performance measures for the joint on true non-zeros only
+fullperfmeas2_nonzero <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim2pf_nonzerosonly.xlsx"))
+
+# performance measures for the joint on true non-zeros and 95% neighbors
+fullperfmeas2_neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim2pf_95neighbors.xlsx"))
+
+# performance measures for the joint on true non-zeros and 90% neighbors
+fullperfmeas2_90neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim2pf_90neighbors.xlsx"))
+
+# performance measures for the joint on true non-zeros and 85% neighbors
+fullperfmeas2_85neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim2pf_85neighbors.xlsx"))
+```
+
+```{r}
+## load results for simulation 3
+
+# performance measures for the marginal estimates
+perfmeasures3 <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/perfmeasures3.xlsx"))
+
+# performance measures for the joint on true non-zeros only
+fullperfmeas3_nonzero <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim3pf_nonzerosonly.xlsx"))
+
+# performance measures for the joint on the true non-zeros and 95% neighbors
+fullperfmeas3_neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim3pf_95neighbors.xlsx"))
+
+# performance measures for the joint on true non-zeros and 90% neighbors
+fullperfmeas3_90neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim3pf_90neighbors.xlsx"))
+
+# performance measures for the joint on true non-zeros and 85% neighbors
+fullperfmeas3_85neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim3pf_85neighbors.xlsx"))
+```
+
+```{r}
+## load results for simulation 4
+
+# performance measures for the marginal estimates
+perfmeasures4 <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/perfmeasures4.xlsx"))
+
+# performance measures for the joint on the true non-zeros only
+fullperfmeas4_nonzero <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim4pf_nonzerosonly.xlsx"))
+
+# performance measures for the joint on the true non-zeros and 95% neighbors
+fullperfmeas4_neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim4pf_95neighbors.xlsx"))
+
+# performance measures for the joint on true non-zeros and 90% neighbors
+fullperfmeas4_90neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim4pf_90neighbors.xlsx"))
+
+# performance measures for the joint on true non-zeros and 85% neighbors
+fullperfmeas4_85neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim4pf_85neighbors.xlsx"))
+```
+
+
+```{r}
+## combine all m1 simulation results into one matrix for marginals
+perfmeasures_pairs <- matrix(NA, nrow = 19, ncol = 17)
+colnames(perfmeasures_pairs) <- c("Bias_0.005", "SD_0.005", "AvgEst_0.005", "MSE_0.005",
+                                  "Bias_0.01", "SD_0.01", "AvgEst_0.01", "MSE_0.01",
+                                  "Bias_0.05", "SD_0.05", "AvgEst_0.05", "MSE_0.05",
+                                  "Bias_0.1", "SD_0.1", "AvgEst_0.1", "MSE_0.1",
+                                  "Site")
+perfmeasures_pairs[,1:3] <- perfmeasures1
+perfmeasures_pairs[,4] <- perfmeasures1[,2] + (perfmeasures1[,1])^2
+perfmeasures_pairs[,5:7] <- perfmeasures2
+perfmeasures_pairs[,8] <- perfmeasures2[,2] + (perfmeasures2[,1])^2
+perfmeasures_pairs[,9:11] <- perfmeasures3
+perfmeasures_pairs[,12] <- perfmeasures3[,2] + (perfmeasures3[,1])^2
+perfmeasures_pairs[,13:15] <- perfmeasures4
+perfmeasures_pairs[,16] <- perfmeasures4[,2] + (perfmeasures4[,1])^2 
+perfmeasures_pairs[,17] <- c(1:19)
+
+perfmeasures_pairs <- as.data.frame(perfmeasures_pairs)
+```
+
+```{r}
+## combine all m1 reconstruction joints for true non-zeros only into one df
+pf_full_pairs <- matrix(NA, nrow = 91, ncol = 18)
+# need to reorder column names
+colnames(pf_full_pairs) <- c("AvgEst_0.005", "Bias_0.005", "SD_0.005", "MSE_0.005",
+                                  "AvgEst_0.01", "Bias_0.01", "SD_0.01", "MSE_0.01",
+                                  "AvgEst_0.05", "Bias_0.05", "SD_0.05", "MSE_0.05",
+                                  "AvgEst_0.1", "Bias_0.1", "SD_0.1", "MSE_0.1",
+                                  "Bit", "True")
+pf_full_pairs[,1:4] <- fullperfmeas1_nonzero[,3:6]
+pf_full_pairs[,5:8] <- fullperfmeas2_nonzero[,3:6]
+pf_full_pairs[,9:12] <- fullperfmeas3_nonzero[,3:6]
+pf_full_pairs[,13:16] <- fullperfmeas4_nonzero[,3:6]
+pf_full_pairs[,17] <- fullperfmeas4_nonzero[,1] 
+pf_full_pairs[,18] <- fullperfmeas4_nonzero[,2]
+
+pf_full_pairs <- as.data.frame(pf_full_pairs)
+```
+
+### Threewise Data
+
+```{r}
+## load results for simulation 5
+
+# performance measures for marginal estimates, both free parameters
+perfmeasures5 <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim5_marg_pf.xlsx"))
+
+# performance measures for joint on true non-zeros only
+fullperfmeas5_nonzero <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim5_joint_nonzero.xlsx"))
+
+# performance measures for joint on true non-zeros and 95% neighbors
+fullperfmeas5_neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim5_joint_nonzeroneighbors.xlsx"))
+
+# performance measures for joint on true non-zeros and 90% neighbors
+fullperfmeas5_90neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim5_joint_nonzero90neighbors.xlsx"))
+
+# performance measures for joint on true non-zeros and 85% neighbors
+fullperfmeas5_85neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim5_joint_nonzero85neighbors.xlsx"))
+```
+
+```{r}
+## load results for simulation 6
+
+# performance measures for marginal estimates, both free parameters
+perfmeasures6 <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim6_marg_pf.xlsx"))
+
+# performance measures for joint on true non-zeros only
+fullperfmeas6_nonzero <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim6_joint_nonzero.xlsx"))
+
+# performance measures for joint on true non-zeros and 95% neighbors
+fullperfmeas6_neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim6_joint_nonzeroneighbors.xlsx"))
+
+# performance measures for joint on true non-zeros and 90% neighbors
+fullperfmeas6_90neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim6_joint_nonzero90neighbors.xlsx"))
+
+# performance measures for joint on true non-zeros and 85% neighbors
+fullperfmeas6_85neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim6_joint_nonzero85neighbors.xlsx"))
+```
+
+```{r}
+## load results for simulation 7
+
+# performance measures for marginal estimates, both free parameters
+perfmeasures7 <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim7_marg_pf.xlsx"))
+
+# performance measures for joint on true non-zeros only
+fullperfmeas7_nonzero <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim7_joint_nonzero.xlsx"))
+
+# performance measures for joint on true non-zeros and 95% neighbors
+fullperfmeas7_neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim7_joint_nonzeroneighbors.xlsx"))
+
+# performance measures for joint on true non-zeros and 90% neighbors
+fullperfmeas7_90neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim7_joint_nonzero90neighbors.xlsx"))
+
+# performance measures for joint on true non-zeros and 85% neighbors
+fullperfmeas7_85neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim7_joint_nonzero85neighbors.xlsx"))
+```
+
+```{r}
+## load results for simulation 8
+
+# performance measures for marginal estimates, both free parameters
+perfmeasures8 <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim8_marg_pf.xlsx"))
+
+# performance measures for joint on true non-zeros only
+fullperfmeas8_nonzero <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim8_joint_nonzero.xlsx"))
+
+# performance measures for joint on true non-zeros and 95% neighbors
+fullperfmeas8_neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim8_joint_nonzeroneighbors.xlsx"))
+
+# performance measures for joint on true non-zeros and 90% neighbors
+fullperfmeas8_90neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim8_joint_nonzero90neighbors.xlsx"))
+
+# performance measures for joint on true non-zeros and 85% neighbors
+fullperfmeas8_85neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim8_joint_nonzero85neighbors.xlsx"))
+```
+
+```{r}
+## combine all m2 simulation results into one matrix for marginals
+###PHI_S(0,0,0)
+perfmeasures_three_0 <- matrix(NA, nrow = 18, ncol = 17)
+colnames(perfmeasures_three_0) <- c("Bias_0.005", "SD_0.005", "AvgEst_0.005", "MSE_0.005",
+                                  "Bias_0.01", "SD_0.01", "AvgEst_0.01", "MSE_0.01",
+                                  "Bias_0.05", "SD_0.05", "AvgEst_0.05", "MSE_0.05",
+                                  "Bias_0.1", "SD_0.1", "AvgEst_0.1", "MSE_0.1",
+                                  "Site")
+perfmeasures_three_0[,1:3] <- perfmeasures5[,1:3]
+perfmeasures_three_0[,4] <- perfmeasures5[,2] + (perfmeasures5[,1])^2
+perfmeasures_three_0[,5:7] <- perfmeasures6[,1:3]
+perfmeasures_three_0[,8] <- perfmeasures6[,2] + (perfmeasures6[,1])^2
+perfmeasures_three_0[,9:11] <- perfmeasures7[,1:3]
+perfmeasures_three_0[,12] <- perfmeasures7[,2] + (perfmeasures7[,1])^2
+perfmeasures_three_0[,13:15] <- perfmeasures8[,1:3]
+perfmeasures_three_0[,16] <- perfmeasures8[,2] + (perfmeasures8[,1])^2 
+perfmeasures_three_0[,17] <- c(1:18)
+
+perfmeasures_three_0 <- as.data.frame(perfmeasures_three_0)
+
+###PHI_S(0,1,0)
+perfmeasures_three_1 <- matrix(NA, nrow = 18, ncol = 17)
+colnames(perfmeasures_three_1) <- c("Bias_0.005", "SD_0.005", "AvgEst_0.005", "MSE_0.005",
+                                  "Bias_0.01", "SD_0.01", "AvgEst_0.01", "MSE_0.01",
+                                  "Bias_0.05", "SD_0.05", "AvgEst_0.05", "MSE_0.05",
+                                  "Bias_0.1", "SD_0.1", "AvgEst_0.1", "MSE_0.1",
+                                  "Site")
+perfmeasures_three_1[,1:3] <- perfmeasures5[,4:6]
+perfmeasures_three_1[,4] <- perfmeasures5[,5] + (perfmeasures5[,4])^2
+perfmeasures_three_1[,5:7] <- perfmeasures6[,4:6]
+perfmeasures_three_1[,8] <- perfmeasures6[,5] + (perfmeasures6[,4])^2
+perfmeasures_three_1[,9:11] <- perfmeasures7[,4:6]
+perfmeasures_three_1[,12] <- perfmeasures7[,5] + (perfmeasures7[,4])^2
+perfmeasures_three_1[,13:15] <- perfmeasures8[,4:6]
+perfmeasures_three_1[,16] <- perfmeasures8[,5] + (perfmeasures8[,4])^2 
+perfmeasures_three_1[,17] <- c(1:18)
+
+perfmeasures_three_1 <- as.data.frame(perfmeasures_three_1)
+```
+
+```{r}
+## combine all m2 reconstruction joints for true non-zeros only into one df
+pf_full_three <- matrix(NA, nrow = 91, ncol = 18)
+# need to reorder column names
+colnames(pf_full_three) <- c("AvgEst_0.005", "Bias_0.005", "SD_0.005", "MSE_0.005",
+                                  "AvgEst_0.01", "Bias_0.01", "SD_0.01", "MSE_0.01",
+                                  "AvgEst_0.05", "Bias_0.05", "SD_0.05", "MSE_0.05",
+                                  "AvgEst_0.1", "Bias_0.1", "SD_0.1", "MSE_0.1",
+                                  "Bit", "True")
+pf_full_three[,1:4] <- fullperfmeas5_nonzero[,3:6]
+pf_full_three[,5:8] <- fullperfmeas6_nonzero[,3:6]
+pf_full_three[,9:12] <- fullperfmeas7_nonzero[,3:6]
+pf_full_three[,13:16] <- fullperfmeas8_nonzero[,3:6]
+pf_full_three[,17] <- fullperfmeas8_nonzero[,1] 
+pf_full_three[,18] <- fullperfmeas8_nonzero[,2]
+
+pf_full_three <- as.data.frame(pf_full_three)
+```
+
+
+### Fourwise Data
+
+```{r}
+## load results for simulation 9
+
+# performance measures for marginal estimates, all four free parameters
+perfmeasures9 <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim9_marg_pf.xlsx"))
+
+# performance measures for joint on true non-zeros only
+fullperfmeas9_nonzero <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim9_joint_nonzero.xlsx"))
+
+# performance measures for joint on true non-zeros and 95% neighbors
+fullperfmeas9_neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim9_joint_nonzeroneighbors.xlsx"))
+
+# performance measures for joint on true non-zeros and 90% neighbors
+fullperfmeas9_90neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim9_joint_nonzero90neighbors.xlsx"))
+
+# performance measures for joint on true non-zeros and 85% neighbors
+fullperfmeas9_85neighbors <- as.matrix(readxl::read_xlsx("C:/Users/gbean/Documents/MCCL REU files/excel sheets/sim9_joint_nonzero85neighbors.xlsx"))
+```
+
+### Pairwise Plots
+
+```{r}
+mse_m1_marginals <- ggplot(data = perfmeasures_pairs, mapping = aes(x = Site), ) +
+  geom_point(mapping = aes(y = MSE_0.005, color = "purple")) +
+  geom_point(mapping = aes(y = MSE_0.01, color = "cornflowerblue")) +
+  geom_point(mapping = aes(y = MSE_0.05, color = "springgreen")) +
+  geom_point(mapping = aes(y = MSE_0.01, color = "violetred")) +
+  ylab("MSE") +
+  xlab("Site 1:19") +
+  ggtitle("MSE From Pairwise Marginal Estimates") +
+  scale_color_manual(values = c("purple", "cornflowerblue", "springgreen", "violetred"),
+                     labels = c("0.005", "0.01", "0.05", "0.1"),
+                     name = "q Value") +
+  theme_bw()
+mse_m1_marginals
+```
+
+```{r}
+mse_m1_full <- ggplot(data = pf_full_pairs, mapping = aes(x = Bit)) +
+  geom_point(mapping = aes(y = MSE_0.005, color = "purple")) +
+  geom_point(mapping = aes(y = MSE_0.01, color = "cornflowerblue")) +
+  geom_point(mapping = aes(y = MSE_0.05, color = "springgreen")) +
+  geom_point(mapping = aes(y = MSE_0.1, color = "violetred")) +
+  ggtitle("MSE on Full True Non-Zero Sequences, m=1 Reconstruction") +
+  xlab("Bitwise Value") +
+  ylab("MSE") +
+  scale_color_manual(values = c("purple", "cornflowerblue", "springgreen", "violetred"),
+                     labels = c("0.005", "0.01", "0.05", "0.1"),
+                     name = "q Value") +
+  theme_bw() +
+  facet_zoom(xlim = c(0:4611))
+mse_m1_full
+```
+
+```{r}
+mse_m1_full_prob <- ggplot(data = pf_full_pairs, mapping = aes(x = True)) +
+  geom_point(mapping = aes(y = MSE_0.005, color = "purple")) +
+  geom_point(mapping = aes(y = MSE_0.01, color = "cornflowerblue")) +
+  geom_point(mapping = aes(y = MSE_0.05, color = "springgreen")) +
+  geom_point(mapping = aes(y = MSE_0.1, color = "violetred")) +
+  ggtitle("MSE on Joint Distribution, m=1 Reconstruction") +
+  xlab("True Probability") +
+  ylab("MSE") +
+  scale_color_manual(values = c("purple", "cornflowerblue", "springgreen", "violetred"),
+                     labels = c("0.005", "0.01", "0.05", "0.1"),
+                     name = "q Value") +
+  theme_bw() +
+  facet_zoom(xlim = 0.02, zoom.size = 0.5) 
+mse_m1_full_prob
+```
+```{r}
+summary(pf_full_pairs)
+```
+
+#### Threewise plots:
+
+```{r}
+mse_m2_marginals_0 <- ggplot(data = perfmeasures_three_0, mapping = aes(x = Site), ) +
+  geom_point(mapping = aes(y = MSE_0.005, color = "purple")) +
+  geom_point(mapping = aes(y = MSE_0.01, color = "cornflowerblue")) +
+  geom_point(mapping = aes(y = MSE_0.05, color = "springgreen")) +
+  geom_point(mapping = aes(y = MSE_0.01, color = "violetred")) +
+  ylab("MSE") +
+  xlab("Site 1:19") +
+  ggtitle("MSE From Threewise Marginal Estimates, Phi_s(0,0,0)") +
+  scale_color_manual(values = c("purple", "cornflowerblue", "springgreen", "violetred"),
+                     labels = c("0.005", "0.01", "0.05", "0.1"),
+                     name = "q Value") +
+  theme_bw()
+mse_m2_marginals_0
+```
+
+```{r}
+mse_m2_marginals_1 <- ggplot(data = perfmeasures_three_1, mapping = aes(x = Site), ) +
+  geom_point(mapping = aes(y = MSE_0.005, color = "purple")) +
+  geom_point(mapping = aes(y = MSE_0.01, color = "cornflowerblue")) +
+  geom_point(mapping = aes(y = MSE_0.05, color = "springgreen")) +
+  geom_point(mapping = aes(y = MSE_0.01, color = "violetred")) +
+  ylab("MSE") +
+  xlab("Site 1:19") +
+  ggtitle("MSE From Threewise Marginal Estimates, Phi_s(0,1,0)") +
+  scale_color_manual(values = c("purple", "cornflowerblue", "springgreen", "violetred"),
+                     labels = c("0.005", "0.01", "0.05", "0.1"),
+                     name = "q Value") +
+  theme_bw()
+mse_m2_marginals_1
+```
+
+```{r}
+mse_m2_full_prob <- ggplot(data = pf_full_three, mapping = aes(x = True)) +
+  geom_point(mapping = aes(y = MSE_0.005, color = "purple")) +
+  geom_point(mapping = aes(y = MSE_0.01, color = "cornflowerblue")) +
+  geom_point(mapping = aes(y = MSE_0.05, color = "springgreen")) +
+  geom_point(mapping = aes(y = MSE_0.1, color = "violetred")) +
+  ggtitle("MSE on Joint Distribution, m=2 Reconstruction") +
+  xlab("True Probability") +
+  ylab("MSE") +
+  scale_color_manual(values = c("purple", "cornflowerblue", "springgreen", "violetred"),
+                     labels = c("0.005", "0.01", "0.05", "0.1"),
+                     name = "q Value") +
+  theme_bw() +
+  facet_zoom(xlim = 0.02, zoom.size = 0.5) 
+mse_m2_full_prob
+```
+
+#### Mean Squared Error df/table
+
+```{r}
+#### M1 DATA
+## simulation 1
+sim1_mse_q <- round(quantile(pf_full_pairs$MSE_0.005),5)
+sim1_mse_av <- round(mean(pf_full_pairs$MSE_0.005),5)
+
+## simulation 2
+sim2_mse_q <- round(quantile(pf_full_pairs$MSE_0.01),5)
+sim2_mse_av <- round(mean(pf_full_pairs$MSE_0.01),5)
+
+## simulation 3
+sim3_mse_q <- round(quantile(pf_full_pairs$MSE_0.05),5)
+sim3_mse_av <- round(mean(pf_full_pairs$MSE_0.05),5)
+
+## simulation 4
+sim4_mse_q <- round(quantile(pf_full_pairs$MSE_0.1),5)
+sim4_mse_av <- round(mean(pf_full_pairs$MSE_0.1),5)
+
+#### M2 DATA
+## simulation 5
+sim5_mse_q <- round(quantile(pf_full_three$MSE_0.005),5)
+sim5_mse_av <- round(mean(pf_full_three$MSE_0.005), 5)
+
+## simulation 6
+sim6_mse_q <- round(quantile(pf_full_three$MSE_0.01), 5)
+sim6_mse_av <- round(mean(pf_full_three$MSE_0.01), 5)
+
+## simulation 7
+sim7_mse_q <- round(quantile(pf_full_three$MSE_0.05), 5)
+sim7_mse_av <- round(mean(pf_full_three$MSE_0.05), 5)
+
+## simulation 8
+sim8_mse_q <- round(quantile(pf_full_three$MSE_0.1), 5)
+sim8_mse_av <- round(mean(pf_full_three$MSE_0.1), 5)
+
+mse_df <- data.frame(m_value = c(rep(1, times = 4), rep(2, times = 4)),
+                      q_value = c(0.005, 0.01, 0.05, 0.1),
+                      mse_avg = c(sim1_mse_av, sim2_mse_av, sim3_mse_av, sim4_mse_av, sim5_mse_av, sim6_mse_av, sim7_mse_av, sim8_mse_av),
+                      mse_range = c(paste(sim1_mse_q[1]," to ", sim1_mse_q[5], sep = ""), paste(sim2_mse_q[1]," to ", sim2_mse_q[5], sep = ""), paste(sim3_mse_q[1], " to ", sim3_mse_q[5], sep = ""), paste(sim4_mse_q[1]," to ", sim4_mse_q[5], sep = ""), paste(sim5_mse_q[1]," to ", sim5_mse_q[5], sep = ""), paste(sim6_mse_q[1]," to ", sim6_mse_q[5], sep = ""), paste(sim7_mse_q[1]," to ", sim7_mse_q[5], sep = ""), paste(sim8_mse_q[1]," to ", sim8_mse_q[5], sep = "")),
+                      mse_25quant = c(sim1_mse_q[2], sim2_mse_q[2], sim3_mse_q[2], sim4_mse_q[2], sim5_mse_q[2], sim6_mse_q[2], sim7_mse_q[2], sim8_mse_q[2]),
+                      mse_50quant = c(sim1_mse_q[3], sim2_mse_q[3], sim3_mse_q[3], sim4_mse_q[3], sim5_mse_q[3], sim6_mse_q[3], sim7_mse_q[3], sim8_mse_q[3]),
+                      mse_75quant = c(sim1_mse_q[4], sim2_mse_q[4], sim3_mse_q[4], sim4_mse_q[4], sim5_mse_q[4], sim6_mse_q[4], sim7_mse_q[4], sim8_mse_q[4]))
+
+mse_tbl <- xtable(mse_df, digits = c(1,1,3,5,5,5,5,5),
+                  caption = "Mean Squared Error on Reconstructed Joint Distribution")
+names(mse_tbl) <- c("m-value", "q-value", "Avg MSE", "MSE Range", "MSE 25% quantile", "MSE 50% quantile", "MSE 75% quantile")
+```
+
+```{r}
+xtable(mse_tbl)
+```
+
+```{r, results= 'asis'}
+print(mse_tbl, type = "latex")
+```
+
+
+### Density
+
+```{r}
+## simulation 1
+nonzerosum_1 <- sum(fullperfmeas1_nonzero[,3])
+neighborsum_1 <- sum(fullperfmeas1_neighbors[,3])
+neighbor90sum_1 <- sum(fullperfmeas1_90neighbors[,3])
+neighbor85sum_1 <- sum(fullperfmeas1_85neighbors[,3])
+
+## simulation 2
+nonzerosum_2 <- sum(fullperfmeas2_nonzero[,3])
+neighborsum_2 <- sum(fullperfmeas2_neighbors[,3])
+neighbor90sum_2 <- sum(fullperfmeas2_90neighbors[,3])
+neighbor85sum_2 <- sum(fullperfmeas2_85neighbors[,3])
+
+## simulation 3
+nonzerosum_3 <- sum(fullperfmeas3_nonzero[,3])
+neighborsum_3 <- sum(fullperfmeas3_neighbors[,3])
+neighbor90sum_3 <- sum(fullperfmeas3_90neighbors[,3])
+neighbor85sum_3 <- sum(fullperfmeas3_85neighbors[,3])
+
+## simulation 4
+nonzerosum_4 <- sum(fullperfmeas4_nonzero[,3])
+neighborsum_4 <- sum(fullperfmeas4_neighbors[,3])
+neighbor90sum_4 <- sum(fullperfmeas4_90neighbors[,3])
+neighbor85sum_4 <- sum(fullperfmeas4_85neighbors[,3])
+
+## simulation 5
+nonzerosum_5 <- sum(fullperfmeas5_nonzero[,3])
+neighborsum_5 <- sum(fullperfmeas5_neighbors[,3])
+neighbor90sum_5 <- sum(fullperfmeas5_90neighbors[,3])
+neighbor85sum_5 <- sum(fullperfmeas5_85neighbors[,3])
+
+## simulation 6
+nonzerosum_6 <- sum(fullperfmeas6_nonzero[,3])
+neighborsum_6 <- sum(fullperfmeas6_neighbors[,3])
+neighbor90sum_6 <- sum(fullperfmeas6_90neighbors[,3])
+neighbor85sum_6 <- sum(fullperfmeas6_85neighbors[,3])
+
+## simulation 7
+nonzerosum_7 <- sum(fullperfmeas7_nonzero[,3])
+neighborsum_7 <- sum(fullperfmeas7_neighbors[,3])
+neighbor90sum_7 <- sum(fullperfmeas7_90neighbors[,3])
+neighbor85sum_7 <- sum(fullperfmeas7_85neighbors[,3])
+
+## simulation 8
+nonzerosum_8 <- sum(fullperfmeas8_nonzero[,3])
+neighborsum_8 <- sum(fullperfmeas8_neighbors[,3])
+neighbor90sum_8 <- sum(fullperfmeas8_90neighbors[,3])
+neighbor85sum_8 <- sum(fullperfmeas8_85neighbors[,3])
+
+## simulation 9
+nonzerosum_9 <- sum(fullperfmeas9_nonzero[,3])
+neighborsum_9 <- sum(fullperfmeas9_neighbors[,3])
+neighbor90sum_9 <- sum(fullperfmeas9_90neighbors[,3])
+neighbor85sum_9 <- sum(fullperfmeas9_85neighbors[,3])
+
+density_df <- data.frame(m_value = as.factor(c(rep(1, times = 4), rep(2, times = 4), rep(3, times = 4))),
+                         q_value = as.factor(c(0.005, 0.01, 0.05, 0.1)),
+                         nonzero_only = c(nonzerosum_1, nonzerosum_2, nonzerosum_3, nonzerosum_4, nonzerosum_5, nonzerosum_6, nonzerosum_7, nonzerosum_8, nonzerosum_9, NA, NA, NA),
+                         neighbors_95 = c(neighborsum_1, neighborsum_2, neighborsum_3, neighborsum_4, neighborsum_5, neighborsum_6, neighborsum_7, neighborsum_8, neighborsum_9, NA, NA, NA),
+                         neighbors_90 = c(neighbor90sum_1, neighbor90sum_2, neighbor90sum_3, neighbor90sum_4, neighbor90sum_5, neighbor90sum_6, neighbor90sum_7, neighbor90sum_8, neighbor90sum_9, NA, NA, NA),
+                         neighbors_85 = c(neighbor85sum_1, neighbor85sum_2, neighbor85sum_3, neighbor85sum_4, neighbor85sum_5, neighbor85sum_6, neighbor85sum_7, neighbor85sum_8, neighbor85sum_9, NA, NA, NA))
+
+density_tbl <- xtable(density_df, digits = c(1,1,3,5,5,5,5),
+                      caption = "Total Density Assigned on Full Ancestral Sequences")
+names(density_tbl) <- c("m-value", "q-value", "Non-zeros only", "with 95% neighbors", "with 90% neighbors", "with 85% neighbors")
+```
+
+```{r, results = 'asis'}
+print(density_tbl, type = "latex")
+```
+
+
+```{r}
+library(reshape2)
+
+density_new <- melt(density_df, 
+                    id.vars = c("m_value", "q_value"),
+                    variable.name = "num_neighbors",
+                    value.name = "total_density")
+```
+
+
+```{r}
+density_plot <- ggplot(data = density_new, mapping = aes(x = m_value, y = total_density, color = q_value, shape = num_neighbors)) +
+  geom_point() +
+  ggtitle("Total Recovered Density for Non-zeros and Neighbors") +
+  xlab("MC order (m)") +
+  ylab("Density") +
+  theme_bw() 
+  
+density_plot
+```
+
+
+```{r}
+correct_nonzero1 <- sum(fullperfmeas1_nonzero[,3] != 0)
+paste("Simulation 1:", correct_nonzero1, sep = " ")
+correct_nonzero2 <- sum(fullperfmeas2_nonzero[,3] != 0)
+paste("Simulation 2:", correct_nonzero2, sep = " ")
+correct_nonzero3 <- sum(fullperfmeas3_nonzero[,3] != 0)
+paste("Simulation 3:", correct_nonzero3, sep = " ")
+correct_nonzero4 <- sum(fullperfmeas4_nonzero[,3] != 0)
+paste("Simulation 4:", correct_nonzero4, sep = " ")
+correct_nonzero5 <- sum(fullperfmeas5_nonzero[,3] != 0)
+paste("Simulation 5:", correct_nonzero5, sep = " ")
+correct_nonzero6 <- sum(fullperfmeas6_nonzero[,3] != 0)
+paste("Simulation 6:", correct_nonzero6, sep = " ")
+correct_nonzero7 <- sum(fullperfmeas7_nonzero[,3] != 0)
+paste("Simulation 7:", correct_nonzero7, sep = " ")
+correct_nonzero8 <- sum(fullperfmeas8_nonzero[,3] != 0)
+paste("Simulation 8:", correct_nonzero8, sep = " ")
+```
+
+
+## Comparison plots bw avg estimates and the true estimates
+
+```{r}
+# making plot for the pairwise estimates
+
+vals <- c("True" = 8, "Avg Est" = 19)
+
+ggplot(data = NULL, mapping = aes(x = seq(1:19))) +
+  geom_point(mapping = aes(y = perfmeasures1[,3], color = "red"), size = 1, shape = 19) +
+  geom_point(mapping = aes(y = true_phi_sim1), color = "blue", shape = 8, size = 2) +
+  theme_bw() +
+  geom_errorbar(mapping = aes(x=seq(1:19), ymin = (perfmeasures1[,3] - 2*perfmeasures1[,2]), ymax = (perfmeasures1[,3] + 2*perfmeasures1[,2]), color = "red")) +
+  geom_point(mapping = aes(y = perfmeasures2[,3], color = "green"), size = 1, shape = 19) +
+  geom_errorbar(mapping = aes(x = seq(1:19), ymin = (perfmeasures2[,3] - 2*perfmeasures2[,2]), ymax = (perfmeasures2[,3] + 2*perfmeasures2[,2]), color = "green")) +
+  geom_point(mapping = aes(y = perfmeasures3[,3], color = "orange"), size = 1, shape = 19) +
+  geom_errorbar(mapping = aes(x = seq(1:19), ymin = (perfmeasures3[,3] - 2*perfmeasures3[,2]), ymax = (perfmeasures3[,3] + 2*perfmeasures3[,2]), color = "orange")) +
+  geom_point(mapping = aes(y = perfmeasures4[,3], color = "purple"), size = 1, shape = 19) +
+  geom_errorbar(mapping = aes(x = seq(1:19), ymin = (perfmeasures4[,3] - 2*perfmeasures4[,2]), ymax = (perfmeasures4[,3] + 2*perfmeasures4[,2]), color = "purple")) +
+  ylab("Probability") +
+  xlab("Sites, 1 to 19") +
+  scale_color_manual(values = c("red", "green", "orange", "purple"),
+                     labels = c("0.005", "0.01", "0.05", "0.1"),
+                     name = "q Value") +
+  scale_shape_manual(values = vals)
+```
+
+
+```{r}
+pair_marg_data <- data.frame(data_source = c(rep("True", times = 19), rep("Avg Est", times = (19*4))),
+                             simulation = c(rep("True", times = 19), rep("1", times = 19), rep("2", times = 19), rep("3", times = 19), rep("4", times = 19)),
+                             site = rep(seq(1:19), times = 5),
+                             value = c(true_phi_sim1, perfmeasures1[,3], perfmeasures2[,3], perfmeasures3[,3], perfmeasures4[,3]),
+                             sd = c(rep(0, times = 19), perfmeasures1[,2], perfmeasures2[,2], perfmeasures3[,2], perfmeasures4[,2]))
+```
+
+```{r}
+three_marg_0_data <- data.frame(data_source = c(rep("True", times = 18), rep("Avg Est", times = 18*4)),
+                                simulation = c(rep("True", times = 18), rep("5", times = 18), rep("6", times = 18), rep("7", times = 18), rep("8", times = 18)),
+                                site = rep(seq(1:18), times = 5),
+                                value = c(true_phi0_sim2, perfmeasures5[,3], perfmeasures6[,3], perfmeasures7[,3], perfmeasures8[,3]),
+                                sd = c(rep(0, times = 18), perfmeasures5[,2], perfmeasures6[,2], perfmeasures7[,2], perfmeasures8[,2]))
+```
+
+```{r}
+three_marg_1_data <- data.frame(data_source = c(rep("True", times = 18), rep("Avg Est", times = 18*4)),
+                                simulation = c(rep("True", times = 18), rep("5", times = 18), rep("6", times = 18), rep("7", times = 18), rep("8", times = 18)),
+                                site = rep(seq(1:18), times = 5),
+                                value = c(true_phi1_sim2, perfmeasures5[,6], perfmeasures6[,6], perfmeasures7[,6], perfmeasures8[,6]),
+                                sd = c(rep(0, times = 18), perfmeasures5[,5], perfmeasures6[,5], perfmeasures7[,5], perfmeasures8[,5]))
+```
+
+
+
+```{r}
+ggplot(data = pair_marg_data, mapping = aes(color = as.factor(simulation), shape = data_source)) +
+  geom_point(data = pair_marg_data, mapping = aes( x = site, y = value), size = 1) +
+  theme_bw() +
+  geom_errorbar(data = pair_marg_data, mapping = aes(x = site, ymin = value - 2*sd, ymax = value + 2*sd)) +
+  scale_color_manual(values = c("red", "green4", "cornflowerblue", "purple", "magenta"),
+                     labels = c("q=0.005", "q=0.01", "q=0.05", "q=0.1", "True"),
+                     name = "q-value or True") +
+  scale_shape_manual(values = c(16, 17),
+                     labels = c("Avg Est", "True"),
+                     name = "Data Type") +
+  ggtitle(label = "Comparison of Average Estimates with True Value", subtitle = "Pairwise Estimates for Free Parameter")
+```
+
+```{r}
+phi0_errorbar <- ggplot(data = three_marg_0_data, mapping = aes(color = simulation, shape = data_source)) +
+  geom_point(data = three_marg_0_data, mapping = aes(x = site, y = value), size = 1) +
+  theme_bw() +
+  geom_errorbar(data = three_marg_0_data, mapping = aes(x = site, ymin = value - 2*sd, ymax = value + 2*sd)) +
+  scale_color_manual(values = c("red", "green4", "cornflowerblue", "purple", "magenta"),
+                     labels = c("q=0.005", "q=0.01", "q=0.05", "q=0.1", "True"),
+                     name = "q-value or True") +
+  scale_shape_manual(values = c(16, 17),
+                     labels = c("Avg Est", "True"),
+                     name = "Data Type") +
+  ggtitle(label = "Comparison of Average Estimates with True Value", subtitle = "Threewise Estimates for 1st Free Parameter")
+```
+
+
+```{r}
+phi1_errorbar <- ggplot(data = three_marg_1_data, mapping = aes(color = simulation, shape = data_source)) +
+  geom_point(data = three_marg_1_data, mapping = aes(x=site, y =value), size = 1) +
+  geom_errorbar(data = three_marg_1_data, mapping = aes(x=site, ymin = value - 2*sd, ymax = value + 2*sd)) +
+  scale_color_manual(values = c("red", "green4", "cornflowerblue", "purple", "magenta"),
+                     labels = c("q=0.005", "q=0.01", "q=0.05", "q=0.1", "True"),
+                     name = "q-value or True") +
+  scale_shape_manual(values = c(16,17),
+                     labels = c("Avg Est", "True"),
+                     name = "Data Type") +
+  theme_bw() +
+  ggtitle(label = "Comparison of Average Estimates with True Value", subtitle = "Threewise Estimates for 2nd Free Parameter")
+```
+
+
+```{r}
+ggplot(data = as.data.frame(perfmeasures2), mapping = aes(x = seq(1:19), y = Bias)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  theme_bw() +
+  xlab("Site") +
+  ggtitle(label = "Bias for Free Parameter", subtitle = "Simulation 2, q=0.01")
+```
+
+```{r}
+ggplot(data = as.data.frame(perfmeasures4), mapping = aes(x = seq(1:19), y = Bias)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  theme_bw() +
+  xlab("Site") +
+  ggtitle(label = "Bias for Free Parameter", subtitle = "Simulation 4, q=0.1")
+```
+
+```{r}
+ggplot(data = as.data.frame(perfmeasures3), mapping = aes(x = seq(1:19), y = sd)) +
+  geom_point() +
+  theme_bw() +
+  xlab("Site") +
+  ylab("Empirical SE") +
+  ggtitle("Empirical SE for Free Parameter", subtitle = "Simulation 3, q=0.05")
+```
+
+```{r}
+data6 <- data.frame(parameter = c(rep("phi_0", times = 18), rep("phi_1", times = 18)),
+                    site = rep(seq(1:18), times = 2),
+                    bias = c(perfmeasures6[,1], perfmeasures6[,4]))
+```
+
+
+```{r}
+ggplot(data = as.data.frame(perfmeasures6), mapping = aes(x = seq(1:18), y = Bias1)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  theme_bw()
+```
+
+```{r}
+sim6_bias_plot <- ggplot(data = data6, mapping = aes(color = parameter)) +
+  geom_point(aes(x=site, y=bias)) +
+  theme_bw() +
+  geom_hline(yintercept = 0) +
+  scale_color_manual(values = c("red", "blue"))
+sim6_bias_plot
+```
+
+
+```{r}
+data8 <- data.frame(parameter = c(rep("phi_0", times = 18), rep("phi_1", times = 18)),
+                    site = rep(seq(1:18), times = 2),
+                    bias = c(perfmeasures8[,1], perfmeasures8[,4]))
+
+sim8_bias_plot <- ggplot(data = data8, mapping = aes(color = parameter)) +
+  geom_point(aes(x=site, y=bias)) +
+  theme_bw() +
+  geom_hline(yintercept = 0) +
+  scale_color_manual(values = c("red", "blue"),
+                     labels = c("Phi_0", "Phi_1"),
+                     name = "Free Parameters")
+
+grid.arrange(sim6_bias_plot, sim8_bias_plot, ncol = 2)
+```
+
+```{r}
+data_6and8 <- data.frame(simulation = c(rep("6", times = 18*2), rep("8", times = 18*2)),
+                         site = rep(seq(1:18), times = 4),
+                      
+                         parameter = rep(c(rep("Phi_0", times = 18), rep("Phi_1", times = 18)), times = 2),
+                         bias = c(perfmeasures6[,1], perfmeasures6[,4], perfmeasures8[,1], perfmeasures8[,4]))
+
+three_data <- data.frame(simulation = c(rep("5", times = 18*2), rep("6", times = 18*2), rep("7", times = 18*2), rep("8", times = 18*2)),
+                         site = rep(seq(1:18), times = 8),
+                         parameter = rep(c(rep("Phi_0", times = 18), rep("Phi_1", times = 18)), times = 4),
+                         bias = c(perfmeasures5[,1], perfmeasures5[,4], perfmeasures6[,1], perfmeasures6[,4], perfmeasures7[,1], perfmeasures7[,4], perfmeasures8[,1], perfmeasures8[,4]))
+```
+
+
+```{r}
+ggplot(data = data_6and8, mapping = aes(color = parameter)) +
+  geom_point(mapping = aes(x = site, y = bias)) +
+  geom_hline(yintercept = 0) +
+  facet_wrap(~simulation, ncol = 2) +
+  theme_bw() +
+  scale_color_manual(values = c("red", "blue"),
+                     labels = c("Phi0", "Phi1"),
+                     name = "Parameters") +
+  ggtitle(label = "Bias on Free Parameters for Simulation 6 and 8", subtitle = "Threewise Simulations, q=0.01 and q=0.1")
+```
+
+```{r}
+ggplot(data = three_data, mapping = aes(color = parameter)) +
+  geom_point(mapping = aes(x = site, y = bias)) +
+  geom_hline(yintercept = 0) +
+  facet_wrap(~simulation, ncol = 4) +
+  theme_bw() +
+  scale_color_manual(values = c("red", "blue"),
+                     labels = c("Phi0", "Phi1"),
+                     name = "Parameters") +
+  ggtitle(label = "Bias on Free Parameters for Simulation 5, 6, 7, and 8", subtitle = "Threewise Simulations, q=0.005, 0.01, 0.05, 0.1")
+```
+
+
+```{r}
+data_2and4 <- data.frame(simulation = c(rep("2", times = 19), rep("4", times = 19)),
+                         site = rep(seq(1:19), times = 2),
+                         bias = c(perfmeasures2[,1], perfmeasures4[,1]))
+```
+
+```{r}
+ggplot(data = data_2and4) +
+  geom_point(mapping = aes(x = site, y = bias)) +
+  geom_hline(yintercept = 0) +
+  facet_wrap(~simulation, ncol = 2) +
+  theme_bw() +
+  ggtitle(label = "Bias on Free Parameter for Simulation 2 and 4", subtitle = "Pairwise Simulations, q=0.01 and q=0.1") +
+  xlab("Sites 1 to 19") +
+  ylab("Bias")
+```
+
+
+
