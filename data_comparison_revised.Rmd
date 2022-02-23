@@ -1,0 +1,138 @@
+---
+title: "Data Comparison, revised version"
+author: "GR"
+date: "2/23/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading data, packages, scripts, etc
+
+```{r}
+# LIBRARY FUNCTION CALLS
+library(sfsmisc)
+library(AlgebraicHaploPackage)
+library(knitr)
+library(writexl)
+
+# SOURCE FUNCTION CALLS
+# source("reading_data.R") # this one takes a while to run
+source("ancestor_L3_bitwise.R")
+source("ancestor_general.R")
+# source("descendant_sequences.R")
+source("onewise_marginal.R")
+source("pairwise_marginal.R")
+source("threewise_marginal.R")
+source("fourwise_marginal.R")
+source("ancestor_estimation.R")
+
+# HAPMAP DATA
+hapmap_binary <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/hapmap_data.xlsx"))
+sample_data <- load(file = "/Users/rhode22g/Documents/sample.RData")
+sample_data
+```
+
+
+## Set true ancestor non-zeros
+```{r}
+positive_id_1
+```
+
+```{r}
+positive_weight_1
+```
+
+```{r}
+true_nonzeroes_sample <- matrix(NA, nrow = length(positive_id_1), ncol = 2)
+true_nonzeroes_sample[,1] <- positive_id_1
+true_nonzeroes_sample[,2] <- positive_weight_1
+colnames(true_nonzeroes_sample) <- c("Bit + 1", "Probability")
+true_nonzeroes_sample
+```
+
+
+
+## Recombination Probability
+```{r}
+q_0
+```
+
+## Calculate onewise estimates
+
+```{r}
+est_m0 <- estimates_m0(descendents = sample, L=10, n = n)
+est_m0
+```
+
+## Calculate pairwise estimates
+
+```{r}
+est_m1 <- estimates_m1(L=10, q=q_0, n=n, d=sample)
+est_m1
+```
+
+## Calculate threewise estimates
+
+```{r}
+est_m2 <- estimates_m2(L=10, q=q_0, n=n, descend = sample)
+est_m2
+```
+
+
+## Calculate fourwise estimates
+```{r}
+est_m3 <- estimates_m3(L=10, q=q_0, n=n, d= sample)
+est_m3
+```
+
+## order-1 MC reconstruction
+
+```{r}
+joint_m1 <- ancestor_pair_estimation(L=10, m=1, pairs_est = est_m1, ones_est = est_m0)
+```
+
+## order-2 MC reconstruction
+
+```{r}
+joint_m2 <- ancestor_three_estimation(L=10, m=2, three_est = est_m2, pairs_est = est_m1)
+```
+
+## order-3 MC reconstruction
+
+```{r}
+joint_m3 <- ancestor_four_estimation(L=10, m=3, four_est = est_m3, three_est = est_m2)
+```
+
+
+## Compute density sum
+
+```{r}
+# create a matrix for the estimates
+estimates_sample <- matrix(NA, nrow = length(positive_id_1), ncol = 5)
+estimates_sample[,(1:2)] <- true_nonzeroes_sample
+colnames(estimates_sample) <- c("Bitwise-Val (+ 1)", "True Probability", "Order-1", "Order-2", "Order-3")
+
+# concatenate in the estimates 
+## REMEMBER TO ACCOUNT FOR BIT VS ROW NUMBERS
+estimates_sample[,3] <- joint_m1[(positive_id_1),]
+estimates_sample[,4] <- joint_m2[(positive_id_1),]
+estimates_sample[,5] <- joint_m3[(positive_id_1),]
+
+estimates_sample
+```
+
+```{r}
+# create matrix for the sums
+density_sums <- matrix(NA, nrow = 1, ncol = 4)
+colnames(density_sums) <- c("True", "Order-1", "Order-2", "Order-3")
+density_sums[,1] <- sum(positive_weight_1)
+density_sums[,2] <- sum(estimates_sample[,3])
+density_sums[,3] <- sum(estimates_sample[,4])
+density_sums[,4] <- sum(estimates_sample[,5])
+
+density_sums
+```
+

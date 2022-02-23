@@ -1,0 +1,58 @@
+---
+title: "Bootstrapping confidence intervals"
+author: "GR"
+date: "2/23/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading Data
+```{r}
+pair_q0_005 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/stat395-MCCL/sim1results.xlsx"))
+head(pair_q0_005)
+```
+
+This gives us 100 data points (estimates) for each of the 19 sites. We need to find the bootstrap confidence intervals on each of the 19 sites separately.
+
+## Site 1
+
+```{r}
+# vector of the 100 replications
+site1_m1_q005 <- pair_q0_005[,1]
+true_mean1 <- mean(site1_m1_q005)
+
+# start matrix for the bootstrap samples
+bootstraps_1 <- matrix(NA, ncol = 100, nrow = 100)
+
+# take bootstrap samples
+for (x in 1:100){
+  # sample with replacement
+  bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+  bootstraps_probs <- site1_m1_q005[bootstraps_idx]
+  
+  # put it into the matrix
+  bootstraps_1[,x] <- bootstraps_probs
+}
+
+# start matrix for the deltas
+bootstrap_deltas_1 <- matrix(NA, nrow = 1, ncol = 100)
+for (i in 1:100){
+  bootstrap_deltas_1[1,i] <- mean(bootstraps_1[,i]) - true_mean1
+}
+
+sorted_deltas1 <- sort(bootstrap_deltas_1[1,])
+
+delta025 <- sorted_deltas1[2]
+delta975 <- sorted_deltas1[97]
+```
+
+```{r}
+lowerbound_CI_1 <- true_mean1 - delta025
+upperbound_CI_1 <- true_mean1 - delta975
+
+c(lowerbound_CI_1, upperbound_CI_1)
+```
+
