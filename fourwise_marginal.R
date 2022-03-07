@@ -204,11 +204,13 @@ roots_fourwise_gr1 <- function(q, n_vec, pi_one, pi_two, pi_three, lower_b, uppe
     candidate <- real_roots
   }
   else{
-    candidate <- real_roots[2]
+    candidate <- sort(real_roots)[2]
   }
+  # print("candidate:")
+  # print(candidate)
   
   # select final estimate based on bounds
-  estimate <- candidate*(candidate >= lower_b & candidate <= upper_b) + lower_b*(candidate < lower_b) + upper_b*(candidate > upper_b)
+  estimate <- candidate*((candidate >= lower_b) & (candidate <= upper_b)) + lower_b*(candidate < lower_b) + upper_b*(candidate > upper_b)
   
   # return the final estimate of phi(0,0)
   return(round(estimate, 10))
@@ -257,7 +259,7 @@ roots_fourwise_gr2 <- function(q, n_vec, pi_one, pi_two, pi_three, lower_b, uppe
     candidate <- real_roots
   }
   else{
-    candidate <- real_roots[2]
+    candidate <- sort(real_roots)[2]
   }
   
   # select final estimate based on bounds
@@ -308,7 +310,7 @@ roots_fourwise_gr3 <- function(q, n_vec, pi_one, pi_two, pi_three, lower_b, uppe
     candidate <- real_roots
   }
   else{
-    candidate <- real_roots[2]
+    candidate <- sort(real_roots)[2]
   }
   
   # select final estimate based on bounds
@@ -359,7 +361,7 @@ roots_fourwise_gr4 <- function(q, n_vec, pi_one, pi_two, pi_three, lower_b, uppe
     candidate <- real_roots
   }
   else{
-    candidate <- real_roots[2]
+    candidate <- sort(real_roots)[2]
   }
   
   # select final estimate based on bounds

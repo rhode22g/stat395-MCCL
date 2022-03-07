@@ -142,6 +142,7 @@ for (i in 1:100){
   simulation_results9_phi01[i,] <- fourwise_estimates[3,]
   simulation_results9_phi10[i,] <- fourwise_estimates[5,]
   simulation_results9_phi11[i,] <- fourwise_estimates[7,]
+  
   sim9_full[,(i+2)] <- ancestor_four_estimation(L = 20, m = 3, four_est = fourwise_estimates, three_est = threewise_estimates)
 }
 comp_timefinal9 <- proc.time() - comp_time9
@@ -611,17 +612,6 @@ ggplot() +
   geom_point(aes(x= 1:17, y = perf_measures_sim11[,12]), colour = "blue", size = 1) +
   geom_errorbar(aes(1:17, perf_measures_sim11[,12], ymin = perf_measures_sim11[,12] - 2*perf_measures_sim11[,11], ymax = perf_measures_sim11[,12] + 2*perf_measures_sim11[,11]), color = "cornflowerblue") +
   ggtitle(label = "Plot of Average Estimates Phi(1,1) w/ 2*sd Compared with True Value", subtitle = "(Fourwise, q=0.05)") +
-  xlab("Site on Sequence (s)") +
-  ylab("Probability")
-```
-Compare to true values, $\phi_s(1)$
-
-```{r}
-ggplot() +
-  geom_point(aes(x = 1:18, y = true_phi1_sim2), colour = "red", shape = 8) +
-  geom_point(aes(x= 1:18, y = perf_measures_sim7[,6]), colour = "blue", size = 1) +
-  geom_errorbar(aes(1:18, perf_measures_sim7[,6], ymin = perf_measures_sim7[,6] - 2*perf_measures_sim7[,5], ymax = perf_measures_sim7[,6] + 2*perf_measures_sim7[,5]), color = "cornflowerblue") +
-  ggtitle(label = "Plot of Average Estimates Phi(1) w/ 2*sd Compared with True Value", subtitle = "(Threewise, q=0.05)") +
   xlab("Site on Sequence (s)") +
   ylab("Probability")
 ```

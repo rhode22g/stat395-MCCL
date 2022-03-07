@@ -13,11 +13,11 @@ library(AlgebraicHaploPackage)
 # m <- 3
 # L <- 15
 # test_ancestor <- ancestor(L=L, hapmap_binary)
-# test_example <- descendent_sample(L=L, q=0.1, n=5, seed=7, hapmap_binary)
-# test_onewise <- estimates_m0(test_example, L=L, n=5)
-# test_pairwise <- estimates_m1(L=L, q=0.1, n=5, d=test_example)
-# test_threewise <- estimates_m2(L=L, q=0.1, n=5, descend = test_example)
-# test_fourwise <- estimates_m3(L = L, q = 0.1, n=5, d = test_example)
+# test_example <- descendent_sample(L=20, q=0.1, n=5, seed=7, hapmap_binary)
+# # test_onewise <- estimates_m0(test_example, L=L, n=5)
+# # test_pairwise <- estimates_m1(L=L, q=0.1, n=5, d=test_example)
+# test_threewise <- estimates_m2(L=20, q=0.1, n=5, descend = test_example)
+# test_fourwise <- estimates_m3(L = 20, q = 0.1, n=5, d = test_example)
 ###############
 
 
@@ -218,10 +218,11 @@ ancestor_four_estimation <- function(L, m, four_est, three_est){
   
   # calculate estimates
   an_ests <- matrix(NA, nrow = (2^L), ncol = 1)
-  an_ests <- apply(to_mult, 1, prod)
+  an_ests <- apply(to_mult, 1, prod, na.rm = TRUE)
   
   # replace NA's with zeros
   an_ests[is.na(an_ests)] <- 0
+  an_ests[is.infinite(an_ests)] <- 0
   
   # return matrix of estimates
   an_ests <- as.matrix(an_ests)
@@ -279,5 +280,5 @@ ancestor_four_estimation <- function(L, m, four_est, three_est){
 # test function performance
 # ancestor_test <- ancestor_pair_estimation(L=L, m=m, pairs_est = test_pairwise, ones_est = test_onewise)
 # ancestor_test_2 <- ancestor_three_estimation(L = L, m=2, three_est = test_threewise, pairs_est = test_pairwise)
-# ancestor_test_3 <- ancestor_four_estimation(L = L, m = 3, four_est = test_fourwise, three_est = test_threewise)
+# ancestor_test_3 <- ancestor_four_estimation(L = 20, m = 3, four_est = test_fourwise, three_est = test_threewise)
 ###################
