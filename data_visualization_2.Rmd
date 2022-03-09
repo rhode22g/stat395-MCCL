@@ -1,0 +1,60 @@
+---
+title: "data visualization 2"
+author: "GR"
+date: "3/9/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## bias and variance trade off
+
+```{r}
+joint_bias_sd <- data.frame(simulation_number = c(rep(1, times = length(nonzero_bits)), rep(2, times = length(nonzero_bits)), rep(3, times = length(nonzero_bits)),
+                                               rep(4, times = length(nonzero_bits)), rep(5, times = length(nonzero_bits)), rep(6, times = length(nonzero_bits)),
+                                               rep(7, times = length(nonzero_bits)), rep(8, times = length(nonzero_bits)), rep(9, times = length(nonzero_bits)),
+                                               rep(10, times = length(nonzero_bits)), rep(11, times = length(nonzero_bits)), rep(12, times = length(nonzero_bits))),
+                         q_value = rep(c(rep("q=0.005", times = length(nonzero_bits)), rep("q=0.01", times = length(nonzero_bits)), rep("q=0.05", times = length(nonzero_bits)), rep("q=0.1", length(nonzero_bits))), times = 3),
+                         m_value = c(rep("m=1", times = 4*length(nonzero_bits)), rep("m=2", times = 4*length(nonzero_bits)), rep("m=3", times = 4*length(nonzero_bits))),
+                         sequence = rep(nonzero_bits, times = 12),
+                         bias = c(fullperfmeas1_nonzero[,4], fullperfmeas2_nonzero[,4], fullperfmeas3_nonzero[,4], fullperfmeas4_nonzero[,4], fullperfmeas5_nonzero[,4], fullperfmeas6_nonzero[,4],
+                                  fullperfmeas7_nonzero[,4], fullperfmeas8_nonzero[,4], sim9_full_nonzeros[,4], sim10_full_nonzeros[,4], sim11_full_nonzeros[,4], sim12_full_nonzeros[,4]),
+                         sd = c(fullperfmeas1_nonzero[,5], fullperfmeas2_nonzero[,5], fullperfmeas3_nonzero[,5], fullperfmeas4_nonzero[,5], fullperfmeas5_nonzero[,5], fullperfmeas6_nonzero[,5],
+                                  fullperfmeas7_nonzero[,5], fullperfmeas8_nonzero[,5], sim9_full_nonzeros[,5], sim10_full_nonzeros[,5], sim11_full_nonzeros[,5], sim12_full_nonzeros[,5]))
+```
+
+```{r}
+library(ggplot2)
+
+joint_bias_plot <- ggplot(data = joint_bias_sd, mapping = aes(x = sequence, y = bias)) +
+  geom_point(mapping = aes(color = q_value)) +
+  facet_wrap(~m_value, ncol = 3) +
+  geom_hline(yintercept = 0) +
+  theme_bw() +
+  scale_color_manual(values = c("red", "blue", "orange", "darkgreen"),
+                     labels = c("q=0.005", "q=0.01", "q=0.05", "q=0.1"),
+                     name = "q-value") +
+  ggtitle(label = "Bias on Joint Distribution Estimates for True Non-Zero Sequences") +
+  xlab("Bitwise Value") +
+  ylab("Bias")
+
+joint_bias_plot
+```
+
+```{r}
+joint_se_plot <- ggplot(data = joint_bias_sd, mapping = aes(x = sequence, y = sd)) +
+  geom_point(mapping = aes(color = q_value)) +
+  facet_wrap(~m_value, ncol = 3)+
+  theme_bw() +
+  scale_color_manual(values = c("red", "blue", "orange", "darkgreen"),
+                     labels = c("q=0.005", "q=0.01", "q=0.05", "q=0.1"),
+                     name = "q-value") +
+  ggtitle(label = "SE on Joint Distribution Estimates for True Non-Zero Sequences") +
+  xlab("Bitwise Value") +
+  ylab("Standard Error")
+
+joint_se_plot
+```
+
