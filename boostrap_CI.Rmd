@@ -7,6 +7,8 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
 ```
 
 ## Loading Data
@@ -17,7 +19,7 @@ head(pair_q0_005)
 
 This gives us 100 data points (estimates) for each of the 19 sites. We need to find the bootstrap confidence intervals on each of the 19 sites separately.
 
-## Site 1
+## Site 1, test point
 
 ```{r}
 # vector of the 100 replications
@@ -56,3 +58,252 @@ upperbound_CI_1 <- true_mean1 - delta975
 c(lowerbound_CI_1, upperbound_CI_1)
 ```
 
+# PAIRWISE SIMULATIONS
+
+## SIMULATION 1
+
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim1 <- matrix(NA, nrow = 3, ncol = 19)
+colnames(bootstrap_CI_sim1) <- paste("Site", seq(1:19), sep = "")
+rownames(bootstrap_CI_sim1) <- c("mean", "upper", "lower")
+
+# initialize matrix for bootstrap sample
+
+# loop over the sites
+for(z in 1:19){
+  true_mean <- mean(pair_q0_05[,z])
+  
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- pair_q0_005[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim1[1,z] <- true_mean
+  bootstrap_CI_sim1[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim1[3,z] <- true_mean - delta_975
+
+}
+```
+
+```{r}
+bootstrap_CI_sim1
+```
+
+
+```{r}
+sim1_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:19), y = bootstrap_CI_sim1[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:19), y = bootstrap_CI_sim1[1,], ymin = bootstrap_CI_sim1[2,], ymax = bootstrap_CI_sim1[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:19), y=true_phi_sim1), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability For Free Parameter, 95% Bootstrap Confidence Intervals", subtitle = "m=1, q=0.005") +
+  scale_color_manual(values = c("red", "blue"),
+                     labels = c("Average Estimate"),
+                     name = "Legend")
+sim1_bootstrap_plot
+```
+
+## SIMULATION 2
+
+```{r}
+pair_q0_01 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/stat395-MCCL/sim2results.xlsx"))
+head(pair_q0_01)
+```
+
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim2 <- matrix(NA, nrow = 3, ncol = 19)
+colnames(bootstrap_CI_sim2) <- paste("Site", seq(1:19), sep = "")
+rownames(bootstrap_CI_sim2) <- c("mean", "upper", "lower")
+
+# initialize matrix for bootstrap sample
+
+# loop over the sites
+for(z in 1:19){
+  true_mean <- mean(pair_q0_01[,z])
+  
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- pair_q0_01[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim2[1,z] <- true_mean
+  bootstrap_CI_sim2[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim2[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim2
+```
+
+```{r}
+ggplot() +
+  geom_point(mapping = aes(x=c(1:19), y = bootstrap_CI_sim2[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:19), y = bootstrap_CI_sim2[1,], ymin = bootstrap_CI_sim2[2,], ymax = bootstrap_CI_sim2[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:19), y=true_phi_sim1), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability For Free Parameter, 95% Bootstrap Confidence Intervals", subtitle = "m=1, q=0.01")
+```
+
+## SIMULATION 3
+
+```{r}
+pair_q0_05 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/stat395-MCCL/sim3results.xlsx"))
+head(pair_q0_05)
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim3 <- matrix(NA, nrow = 3, ncol = 19)
+colnames(bootstrap_CI_sim3) <- paste("Site", seq(1:19), sep = "")
+rownames(bootstrap_CI_sim3) <- c("mean", "upper", "lower")
+
+# initialize matrix for bootstrap sample
+
+# loop over the sites
+for(z in 1:19){
+  true_mean <- mean(pair_q0_05[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- pair_q0_05[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim3[1,z] <- true_mean
+  bootstrap_CI_sim3[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim3[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim3
+```
+
+```{r}
+ggplot() +
+  geom_point(mapping = aes(x=c(1:19), y = bootstrap_CI_sim3[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:19), y = bootstrap_CI_sim3[1,], ymin = bootstrap_CI_sim3[2,], ymax = bootstrap_CI_sim3[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:19), y=true_phi_sim1), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability For Free Parameter, 95% Bootstrap Confidence Intervals", subtitle = "m=1, q=0.05")
+```
+
+## SIMULATION 4
+
+```{r}
+pair_q0_1 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/stat395-MCCL/sim4results.xlsx"))
+head(pair_q0_1)
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim4 <- matrix(NA, nrow = 3, ncol = 19)
+colnames(bootstrap_CI_sim4) <- paste("Site", seq(1:19), sep = "")
+rownames(bootstrap_CI_sim4) <- c("mean", "upper", "lower")
+
+# initialize matrix for bootstrap sample
+
+# loop over the sites
+for(z in 1:19){
+  true_mean <- mean(pair_q0_1[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- pair_q0_1[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim4[1,z] <- true_mean
+  bootstrap_CI_sim4[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim4[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim4
+```
+
+```{r}
+ggplot() +
+  geom_point(mapping = aes(x=c(1:19), y = bootstrap_CI_sim4[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:19), y = bootstrap_CI_sim4[1,], ymin = bootstrap_CI_sim4[2,], ymax = bootstrap_CI_sim4[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:19), y=true_phi_sim1), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability For Free Parameter, 95% Bootstrap Confidence Intervals", subtitle = "m=1, q=0.1")
+```
+
+# THREEWISE SIMULATIONS
