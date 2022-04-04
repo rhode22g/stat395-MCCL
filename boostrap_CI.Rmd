@@ -176,7 +176,7 @@ bootstrap_CI_sim2
 ```
 
 ```{r}
-ggplot() +
+sim2_bootstrap_plot <- ggplot() +
   geom_point(mapping = aes(x=c(1:19), y = bootstrap_CI_sim2[1,]), color = "red") +
   geom_errorbar(mapping = aes(x=c(1:19), y = bootstrap_CI_sim2[1,], ymin = bootstrap_CI_sim2[2,], ymax = bootstrap_CI_sim2[3,])) +
   theme_bw() +
@@ -184,6 +184,7 @@ ggplot() +
   xlab("Site") +
   ylab("Probability") +
   ggtitle("True Probability For Free Parameter, 95% Bootstrap Confidence Intervals", subtitle = "m=1, q=0.01")
+sim2_bootstrap_plot
 ```
 
 ## SIMULATION 3
@@ -236,7 +237,7 @@ bootstrap_CI_sim3
 ```
 
 ```{r}
-ggplot() +
+sim3_bootstrap_plot <- ggplot() +
   geom_point(mapping = aes(x=c(1:19), y = bootstrap_CI_sim3[1,]), color = "red") +
   geom_errorbar(mapping = aes(x=c(1:19), y = bootstrap_CI_sim3[1,], ymin = bootstrap_CI_sim3[2,], ymax = bootstrap_CI_sim3[3,])) +
   theme_bw() +
@@ -244,6 +245,8 @@ ggplot() +
   xlab("Site") +
   ylab("Probability") +
   ggtitle("True Probability For Free Parameter, 95% Bootstrap Confidence Intervals", subtitle = "m=1, q=0.05")
+
+sim3_bootstrap_plot
 ```
 
 ## SIMULATION 4
@@ -296,7 +299,7 @@ bootstrap_CI_sim4
 ```
 
 ```{r}
-ggplot() +
+sim4_bootstrap_plot <- ggplot() +
   geom_point(mapping = aes(x=c(1:19), y = bootstrap_CI_sim4[1,]), color = "red") +
   geom_errorbar(mapping = aes(x=c(1:19), y = bootstrap_CI_sim4[1,], ymin = bootstrap_CI_sim4[2,], ymax = bootstrap_CI_sim4[3,])) +
   theme_bw() +
@@ -304,6 +307,1454 @@ ggplot() +
   xlab("Site") +
   ylab("Probability") +
   ggtitle("True Probability For Free Parameter, 95% Bootstrap Confidence Intervals", subtitle = "m=1, q=0.1")
+sim4_bootstrap_plot
 ```
 
 # THREEWISE SIMULATIONS
+
+## Simulation 5
+```{r}
+three_q0_005_phi0 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/stat395-MCCL/sim5_marg_0.xlsx"))
+head(three_q0_005_phi0)
+```
+
+```{r}
+three_q0_005_phi1 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/stat395-MCCL/sim5_marg_1.xlsx"))
+head(three_q0_005_phi1)
+```
+
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim5_phi0 <- matrix(NA, nrow = 3, ncol = 18)
+colnames(bootstrap_CI_sim5_phi0) <- paste("Site", seq(1:18), sep = "")
+rownames(bootstrap_CI_sim5_phi0) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:18){
+  true_mean <- mean(three_q0_005_phi0[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- three_q0_005_phi0[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim5_phi0[1,z] <- true_mean
+  bootstrap_CI_sim5_phi0[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim5_phi0[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim5_phi0
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim5_phi1 <- matrix(NA, nrow = 3, ncol = 18)
+colnames(bootstrap_CI_sim5_phi1) <- paste("Site", seq(1:18), sep = "")
+rownames(bootstrap_CI_sim5_phi1) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:18){
+  true_mean <- mean(three_q0_005_phi1[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- three_q0_005_phi1[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim5_phi1[1,z] <- true_mean
+  bootstrap_CI_sim5_phi1[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim5_phi1[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim5_phi1
+```
+
+```{r}
+sim5phi0_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:18), y = bootstrap_CI_sim5_phi0[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:18), y = bootstrap_CI_sim5_phi0[1,], ymin = bootstrap_CI_sim5_phi0[2,], ymax = bootstrap_CI_sim5_phi0[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:18), y=true_phi0_sim2), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=2, q=0.005", subtitle = expression(phi[s](0)))
+sim5phi0_bootstrap_plot
+```
+
+```{r}
+sim5phi1_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:18), y = bootstrap_CI_sim5_phi1[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:18), y = bootstrap_CI_sim5_phi1[1,], ymin = bootstrap_CI_sim5_phi1[2,], ymax = bootstrap_CI_sim5_phi1[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:18), y=true_phi1_sim2), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=2,q=0.005", subtitle = expression(phi[s](1)))
+sim5phi1_bootstrap_plot
+```
+
+
+
+
+## Simulation 6
+```{r}
+three_q0_01_phi0 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/stat395-MCCL/sim6_marg_0.xlsx"))
+head(three_q0_01_phi0)
+```
+
+```{r}
+three_q0_01_phi1 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/stat395-MCCL/sim6_marg_1.xlsx"))
+head(three_q0_01_phi1)
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim6_phi0 <- matrix(NA, nrow = 3, ncol = 18)
+colnames(bootstrap_CI_sim6_phi0) <- paste("Site", seq(1:18), sep = "")
+rownames(bootstrap_CI_sim6_phi0) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:18){
+  true_mean <- mean(three_q0_01_phi0[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- three_q0_01_phi0[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim6_phi0[1,z] <- true_mean
+  bootstrap_CI_sim6_phi0[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim6_phi0[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim6_phi0
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim6_phi1 <- matrix(NA, nrow = 3, ncol = 18)
+colnames(bootstrap_CI_sim6_phi1) <- paste("Site", seq(1:18), sep = "")
+rownames(bootstrap_CI_sim6_phi1) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:18){
+  true_mean <- mean(three_q0_01_phi1[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- three_q0_01_phi1[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim6_phi1[1,z] <- true_mean
+  bootstrap_CI_sim6_phi1[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim6_phi1[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim6_phi1
+```
+
+```{r}
+sim6phi0_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:18), y = bootstrap_CI_sim6_phi0[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:18), y = bootstrap_CI_sim6_phi0[1,], ymin = bootstrap_CI_sim6_phi0[2,], ymax = bootstrap_CI_sim6_phi0[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:18), y=true_phi0_sim2), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=2, q=0.01", subtitle = expression(phi[s](0)))
+sim6phi0_bootstrap_plot
+```
+
+```{r}
+sim6phi1_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:18), y = bootstrap_CI_sim6_phi1[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:18), y = bootstrap_CI_sim6_phi1[1,], ymin = bootstrap_CI_sim6_phi1[2,], ymax = bootstrap_CI_sim6_phi1[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:18), y=true_phi1_sim2), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=2,q=0.01", subtitle = expression(phi[s](1)))
+sim6phi1_bootstrap_plot
+```
+
+## Simulation 7
+
+```{r}
+three_q0_05_phi0 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/stat395-MCCL/sim7_marg_0.xlsx"))
+head(three_q0_05_phi0)
+```
+
+```{r}
+three_q0_05_phi1 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/stat395-MCCL/sim7_marg_1.xlsx"))
+head(three_q0_05_phi1)
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim7_phi0 <- matrix(NA, nrow = 3, ncol = 18)
+colnames(bootstrap_CI_sim7_phi0) <- paste("Site", seq(1:18), sep = "")
+rownames(bootstrap_CI_sim7_phi0) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:18){
+  true_mean <- mean(three_q0_05_phi0[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- three_q0_05_phi0[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim7_phi0[1,z] <- true_mean
+  bootstrap_CI_sim7_phi0[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim7_phi0[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim7_phi0
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim7_phi1 <- matrix(NA, nrow = 3, ncol = 18)
+colnames(bootstrap_CI_sim7_phi1) <- paste("Site", seq(1:18), sep = "")
+rownames(bootstrap_CI_sim7_phi1) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:18){
+  true_mean <- mean(three_q0_05_phi1[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- three_q0_05_phi1[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim7_phi1[1,z] <- true_mean
+  bootstrap_CI_sim7_phi1[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim7_phi1[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim7_phi1
+```
+
+```{r}
+sim7phi0_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:18), y = bootstrap_CI_sim7_phi0[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:18), y = bootstrap_CI_sim7_phi0[1,], ymin = bootstrap_CI_sim7_phi0[2,], ymax = bootstrap_CI_sim7_phi0[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:18), y=true_phi0_sim2), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=2, q=0.05", subtitle = expression(phi[s](0)))
+sim7phi0_bootstrap_plot
+```
+
+```{r}
+sim7phi1_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:18), y = bootstrap_CI_sim7_phi1[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:18), y = bootstrap_CI_sim7_phi1[1,], ymin = bootstrap_CI_sim7_phi1[2,], ymax = bootstrap_CI_sim7_phi1[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:18), y=true_phi1_sim2), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=2,q=0.05", subtitle = expression(phi[s](1)))
+sim7phi1_bootstrap_plot
+```
+
+## Simulation 8
+
+```{r}
+three_q0_1_phi0 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/stat395-MCCL/sim8_marg_0.xlsx"))
+head(three_q0_1_phi0)
+```
+
+```{r}
+three_q0_1_phi1 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/stat395-MCCL/sim8_marg_1.xlsx"))
+head(three_q0_1_phi1)
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim8_phi0 <- matrix(NA, nrow = 3, ncol = 18)
+colnames(bootstrap_CI_sim8_phi0) <- paste("Site", seq(1:18), sep = "")
+rownames(bootstrap_CI_sim8_phi0) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:18){
+  true_mean <- mean(three_q0_1_phi0[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- three_q0_1_phi0[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim8_phi0[1,z] <- true_mean
+  bootstrap_CI_sim8_phi0[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim8_phi0[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim8_phi0
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim8_phi1 <- matrix(NA, nrow = 3, ncol = 18)
+colnames(bootstrap_CI_sim8_phi1) <- paste("Site", seq(1:18), sep = "")
+rownames(bootstrap_CI_sim8_phi1) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:18){
+  true_mean <- mean(three_q0_1_phi1[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- three_q0_1_phi1[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim8_phi1[1,z] <- true_mean
+  bootstrap_CI_sim8_phi1[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim8_phi1[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim8_phi1
+```
+
+```{r}
+sim8phi0_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:18), y = bootstrap_CI_sim8_phi0[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:18), y = bootstrap_CI_sim8_phi0[1,], ymin = bootstrap_CI_sim8_phi0[2,], ymax = bootstrap_CI_sim8_phi0[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:18), y=true_phi0_sim2), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=2, q=0.1", subtitle = expression(phi[s](0)))
+sim8phi0_bootstrap_plot
+```
+
+```{r}
+sim8phi1_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:18), y = bootstrap_CI_sim8_phi1[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:18), y = bootstrap_CI_sim8_phi1[1,], ymin = bootstrap_CI_sim8_phi1[2,], ymax = bootstrap_CI_sim8_phi1[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:18), y=true_phi1_sim2), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=2,q=0.1", subtitle = expression(phi[s](1)))
+sim8phi1_bootstrap_plot
+```
+
+# FOURWISE
+
+## Simulation 9
+
+```{r}
+four_q0_005_phi00 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim9_marg_00.xlsx"))
+head(four_q0_005_phi00)
+```
+
+```{r}
+four_q0_005_phi01 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim9_marg_01.xlsx"))
+head(four_q0_005_phi01)
+```
+
+```{r}
+four_q0_005_phi10 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim9_marg_10.xlsx"))
+head(four_q0_005_phi10)
+```
+
+```{r}
+four_q0_005_phi11 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim9_marg_11.xlsx"))
+head(four_q0_005_phi11)
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim9_phi00 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim9_phi00) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim9_phi00) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_005_phi00[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_005_phi00[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim9_phi00[1,z] <- true_mean
+  bootstrap_CI_sim9_phi00[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim9_phi00[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim9_phi00
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim9_phi01 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim9_phi01) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim9_phi01) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_005_phi01[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_005_phi01[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim9_phi01[1,z] <- true_mean
+  bootstrap_CI_sim9_phi01[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim9_phi01[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim9_phi01
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim9_phi10 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim9_phi10) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim9_phi10) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_005_phi10[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_005_phi10[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim9_phi10[1,z] <- true_mean
+  bootstrap_CI_sim9_phi10[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim9_phi10[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim9_phi10
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim9_phi11 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim9_phi11) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim9_phi11) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_005_phi11[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_005_phi11[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim9_phi11[1,z] <- true_mean
+  bootstrap_CI_sim9_phi11[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim9_phi11[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim9_phi11
+```
+
+```{r}
+sim9phi00_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim9_phi00[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim9_phi00[1,], ymin = bootstrap_CI_sim9_phi00[2,], ymax = bootstrap_CI_sim9_phi00[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi00), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.005", subtitle = expression(phi[s](0,0)))
+sim9phi00_bootstrap_plot
+```
+
+```{r}
+sim9phi01_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim9_phi01[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim9_phi01[1,], ymin = bootstrap_CI_sim9_phi01[2,], ymax = bootstrap_CI_sim9_phi01[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi01), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.005", subtitle = expression(phi[s](0,1)))
+sim9phi01_bootstrap_plot
+```
+
+```{r}
+sim9phi10_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim9_phi10[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim9_phi10[1,], ymin = bootstrap_CI_sim9_phi10[2,], ymax = bootstrap_CI_sim9_phi10[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi10), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.005", subtitle = expression(phi[s](1,0)))
+sim9phi10_bootstrap_plot
+```
+
+```{r}
+sim9phi11_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim9_phi11[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim9_phi11[1,], ymin = bootstrap_CI_sim9_phi11[2,], ymax = bootstrap_CI_sim9_phi11[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi11), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.005", subtitle = expression(phi[s](1,1)))
+sim9phi11_bootstrap_plot
+```
+
+## Simulation 10
+
+```{r}
+four_q0_01_phi00 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim10_marg_00.xlsx"))
+head(four_q0_01_phi00)
+```
+
+```{r}
+four_q0_01_phi01 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim10_marg_01.xlsx"))
+head(four_q0_01_phi01)
+```
+
+```{r}
+four_q0_01_phi10 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim10_marg_10.xlsx"))
+head(four_q0_01_phi10)
+```
+
+```{r}
+four_q0_01_phi11 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim10_marg_11.xlsx"))
+head(four_q0_01_phi11)
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim10_phi00 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim10_phi00) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim10_phi00) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_01_phi00[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_01_phi00[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim10_phi00[1,z] <- true_mean
+  bootstrap_CI_sim10_phi00[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim10_phi00[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim10_phi00
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim10_phi01 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim10_phi01) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim10_phi01) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_01_phi01[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_01_phi01[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim10_phi01[1,z] <- true_mean
+  bootstrap_CI_sim10_phi01[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim10_phi01[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim10_phi01
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim10_phi10 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim10_phi10) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim10_phi10) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_01_phi10[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_01_phi10[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim10_phi10[1,z] <- true_mean
+  bootstrap_CI_sim10_phi10[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim10_phi10[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim10_phi10
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim10_phi11 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim10_phi11) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim10_phi11) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_01_phi11[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_01_phi11[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim10_phi11[1,z] <- true_mean
+  bootstrap_CI_sim10_phi11[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim10_phi11[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim10_phi11
+```
+
+```{r}
+sim10phi00_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim10_phi00[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim10_phi00[1,], ymin = bootstrap_CI_sim10_phi00[2,], ymax = bootstrap_CI_sim10_phi00[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi00), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.01", subtitle = expression(phi[s](0,0)))
+sim10phi00_bootstrap_plot
+```
+
+```{r}
+sim10phi01_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim10_phi01[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim10_phi01[1,], ymin = bootstrap_CI_sim10_phi01[2,], ymax = bootstrap_CI_sim10_phi01[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi01), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.01", subtitle = expression(phi[s](0,1)))
+sim10phi01_bootstrap_plot
+```
+```{r}
+sim10phi10_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim10_phi10[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim10_phi10[1,], ymin = bootstrap_CI_sim10_phi10[2,], ymax = bootstrap_CI_sim10_phi10[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi10), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.01", subtitle = expression(phi[s](1,0)))
+sim10phi10_bootstrap_plot
+```
+
+```{r}
+sim10phi11_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim10_phi11[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim10_phi11[1,], ymin = bootstrap_CI_sim10_phi11[2,], ymax = bootstrap_CI_sim10_phi11[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi11), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.01", subtitle = expression(phi[s](1,1)))
+sim10phi11_bootstrap_plot
+```
+
+## Simulation 11
+
+```{r}
+four_q0_05_phi00 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim11_marg_00.xlsx"))
+head(four_q0_05_phi00)
+```
+
+```{r}
+four_q0_05_phi01 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim11_marg_01.xlsx"))
+head(four_q0_05_phi01)
+```
+
+```{r}
+four_q0_05_phi10 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim11_marg_10.xlsx"))
+head(four_q0_05_phi10)
+```
+
+```{r}
+four_q0_05_phi11 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim11_marg_11.xlsx"))
+head(four_q0_05_phi11)
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim11_phi00 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim11_phi00) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim11_phi00) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_05_phi00[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_05_phi00[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim11_phi00[1,z] <- true_mean
+  bootstrap_CI_sim11_phi00[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim11_phi00[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim11_phi00
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim11_phi01 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim11_phi01) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim11_phi01) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_05_phi01[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_05_phi01[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim11_phi01[1,z] <- true_mean
+  bootstrap_CI_sim11_phi01[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim11_phi01[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim11_phi01
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim11_phi10 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim11_phi10) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim11_phi10) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_05_phi10[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_05_phi10[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim11_phi10[1,z] <- true_mean
+  bootstrap_CI_sim11_phi10[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim11_phi10[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim11_phi10
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim11_phi11 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim11_phi11) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim11_phi11) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_05_phi11[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_05_phi11[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim11_phi11[1,z] <- true_mean
+  bootstrap_CI_sim11_phi11[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim11_phi11[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim11_phi11
+```
+
+```{r}
+sim11phi00_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim11_phi00[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim11_phi00[1,], ymin = bootstrap_CI_sim11_phi00[2,], ymax = bootstrap_CI_sim11_phi00[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi00), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.05", subtitle = expression(phi[s](0,0)))
+sim11phi00_bootstrap_plot
+```
+
+```{r}
+sim11phi01_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim11_phi01[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim11_phi01[1,], ymin = bootstrap_CI_sim11_phi01[2,], ymax = bootstrap_CI_sim11_phi01[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi01), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.05", subtitle = expression(phi[s](0,1)))
+sim11phi01_bootstrap_plot
+```
+
+```{r}
+sim11phi10_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim11_phi10[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim11_phi10[1,], ymin = bootstrap_CI_sim11_phi10[2,], ymax = bootstrap_CI_sim11_phi10[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi10), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.05", subtitle = expression(phi[s](1,0)))
+sim11phi10_bootstrap_plot
+```
+
+```{r}
+sim11phi11_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim11_phi11[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim11_phi11[1,], ymin = bootstrap_CI_sim11_phi11[2,], ymax = bootstrap_CI_sim11_phi11[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi11), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.05", subtitle = expression(phi[s](1,1)))
+sim11phi11_bootstrap_plot
+```
+
+## Simulation 12
+
+```{r}
+four_q0_1_phi00 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim12_marg_00.xlsx"))
+head(four_q0_1_phi00)
+```
+
+```{r}
+four_q0_1_phi01 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim12_marg_01.xlsx"))
+head(four_q0_1_phi01)
+```
+
+```{r}
+four_q0_1_phi10 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim12_marg_10.xlsx"))
+head(four_q0_1_phi10)
+```
+
+```{r}
+four_q0_1_phi11 <- as.matrix(readxl::read_xlsx("/Users/rhode22g/Documents/sim12_marg_11.xlsx"))
+head(four_q0_1_phi11)
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim12_phi00 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim12_phi00) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim12_phi00) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_1_phi00[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_1_phi00[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim12_phi00[1,z] <- true_mean
+  bootstrap_CI_sim12_phi00[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim12_phi00[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim12_phi00
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim12_phi01 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim12_phi01) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim12_phi01) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_1_phi01[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_1_phi01[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim12_phi01[1,z] <- true_mean
+  bootstrap_CI_sim12_phi01[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim12_phi01[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim12_phi01
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim12_phi10 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim12_phi10) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim12_phi10) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_1_phi10[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_1_phi10[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim12_phi10[1,z] <- true_mean
+  bootstrap_CI_sim12_phi10[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim12_phi10[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim12_phi10
+```
+
+```{r}
+# initialize matrix for confidence intervals
+bootstrap_CI_sim12_phi11 <- matrix(NA, nrow = 3, ncol = 17)
+colnames(bootstrap_CI_sim12_phi11) <- paste("Site", seq(1:17), sep = "")
+rownames(bootstrap_CI_sim12_phi11) <- c("mean", "upper", "lower")
+
+# loop over the sites
+for(z in 1:17){
+  true_mean <- mean(four_q0_1_phi11[,z])
+  # start matrix for the bootstrap samples
+  bootstraps <- matrix(NA, ncol = 100, nrow = 100)
+  
+  for (x in 1:100){
+    # sample with replacement
+    bootstraps_idx <- sample(c(1:100), size = 100, replace = TRUE)
+    bootstraps_samples <- four_q0_1_phi11[bootstraps_idx, z]
+    
+    # put it into the matrix
+    bootstraps[,x] <- bootstraps_samples
+  }
+  
+  # start matrix for the deltas
+  bootstrap_deltas <- vector(length = 100)
+  for (y in 1:100){
+    bootstrap_deltas[y] <- mean(bootstraps[,y]) - true_mean
+  }
+  
+  sorted_deltas <- sort(bootstrap_deltas)
+  delta_25 <- sorted_deltas[2]
+  delta_975 <- sorted_deltas[97]
+  
+  bootstrap_CI_sim12_phi11[1,z] <- true_mean
+  bootstrap_CI_sim12_phi11[2,z] <- true_mean - delta_25
+  bootstrap_CI_sim12_phi11[3,z] <- true_mean - delta_975
+
+}
+
+bootstrap_CI_sim12_phi11
+```
+
+```{r}
+sim12phi00_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim12_phi00[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim12_phi00[1,], ymin = bootstrap_CI_sim12_phi00[2,], ymax = bootstrap_CI_sim12_phi00[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi00), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.1", subtitle = expression(phi[s](0,0)))
+sim12phi00_bootstrap_plot
+```
+
+```{r}
+sim12phi01_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim12_phi01[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim12_phi01[1,], ymin = bootstrap_CI_sim12_phi01[2,], ymax = bootstrap_CI_sim12_phi01[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi01), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.1", subtitle = expression(phi[s](0,1)))
+sim12phi01_bootstrap_plot
+```
+```{r}
+sim12phi10_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim12_phi10[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim12_phi10[1,], ymin = bootstrap_CI_sim12_phi10[2,], ymax = bootstrap_CI_sim12_phi10[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi10), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.1", subtitle = expression(phi[s](1,0)))
+sim12phi10_bootstrap_plot
+```
+
+```{r}
+sim12phi11_bootstrap_plot <- ggplot() +
+  geom_point(mapping = aes(x=c(1:17), y = bootstrap_CI_sim12_phi11[1,]), color = "red") +
+  geom_errorbar(mapping = aes(x=c(1:17), y = bootstrap_CI_sim12_phi11[1,], ymin = bootstrap_CI_sim12_phi11[2,], ymax = bootstrap_CI_sim12_phi11[3,])) +
+  theme_bw() +
+  geom_point(mapping=aes(x=c(1:17), y=true_phi11), color = "blue") +
+  xlab("Site") +
+  ylab("Probability") +
+  ggtitle("True Probability and 95% Bootstrap Confidence Intervals: m=3, q=0.1", subtitle = expression(phi[s](1,1)))
+sim12phi11_bootstrap_plot
+```
+
+# COMBINED DATA FRAMES
+
+```{r}
+bootstrap_CI_pairs <- data.frame(q_value = c(rep("0.005", times = 19), rep("0.01", times = 19), rep("0.05", times = 19), rep("0.1", times = 19)),
+                                 site = rep(seq(1:19), times = 4),
+                                 mean_est = c(bootstrap_CI_sim1[1,], bootstrap_CI_sim2[1,], bootstrap_CI_sim3[1,], bootstrap_CI_sim4[1,]),
+                                 lower_bound = c(bootstrap_CI_sim1[3,], bootstrap_CI_sim2[3,], bootstrap_CI_sim3[3,], bootstrap_CI_sim4[3,]),
+                                 upper_bound = c(bootstrap_CI_sim1[2,], bootstrap_CI_sim2[2,], bootstrap_CI_sim3[2,], bootstrap_CI_sim4[2,]),
+                                 true_prob = rep(true_phi_sim1, times = 4))
+```
+
+```{r}
+bootstrap_CI_three <- data.frame(q_value = c(rep(rep("0.005", times = 18), times = 2), rep(rep("0.01", times = 18), times = 2), rep(rep("0.05", times = 18), times = 2), rep(rep("0.1", times = 18), times = 2)),
+                                 site = rep(seq(1:18), times = 8),
+                                 parameter = rep(c(rep("phi0", times = 18), rep("phi1", times = 18)), times = 4),
+                                 mean_est = c(bootstrap_CI_sim5_phi0[1,], bootstrap_CI_sim5_phi1[1,], bootstrap_CI_sim6_phi0[1,], bootstrap_CI_sim6_phi1[1,],
+                                              bootstrap_CI_sim7_phi0[1,], bootstrap_CI_sim7_phi1[1,], bootstrap_CI_sim8_phi0[1,], bootstrap_CI_sim8_phi1[1,]),
+                                 lower_bound = c(bootstrap_CI_sim5_phi0[3,], bootstrap_CI_sim5_phi1[3,], bootstrap_CI_sim6_phi0[3,], bootstrap_CI_sim6_phi1[3,],
+                                              bootstrap_CI_sim7_phi0[3,], bootstrap_CI_sim7_phi1[3,], bootstrap_CI_sim8_phi0[3,], bootstrap_CI_sim8_phi1[3,]),
+                                 upper_bound = c(bootstrap_CI_sim5_phi0[2,], bootstrap_CI_sim5_phi1[2,], bootstrap_CI_sim6_phi0[2,], bootstrap_CI_sim6_phi1[2,],
+                                              bootstrap_CI_sim7_phi0[2,], bootstrap_CI_sim7_phi1[2,], bootstrap_CI_sim8_phi0[2,], bootstrap_CI_sim8_phi1[2,]),
+                                 true_prob = rep(c(true_phi0_sim2, true_phi1_sim2), times = 4))
+```
+
+```{r}
+bootstrap_CI_four <- data.frame(q_value = c(rep(rep("0.005", times = 17), times = 4), rep(rep("0.01", times = 17), times = 4), rep(rep("0.05", times = 17), times = 4), rep(rep("0.1", times = 17), times = 4)),
+                                site = rep(seq(1:17), times = 16),
+                                parameter = rep(c(rep("phi00", times = 17), rep("phi01", times = 17), rep("phi10", times = 17), rep("phi11", times = 17)), times = 4),
+                                mean_est = c(bootstrap_CI_sim9_phi00[1,], bootstrap_CI_sim9_phi01[1,], bootstrap_CI_sim9_phi10[1,], bootstrap_CI_sim9_phi11[1,],
+                                             bootstrap_CI_sim10_phi00[1,], bootstrap_CI_sim10_phi01[1,], bootstrap_CI_sim10_phi10[1,], bootstrap_CI_sim10_phi11[1,],
+                                             bootstrap_CI_sim11_phi00[1,], bootstrap_CI_sim11_phi01[1,], bootstrap_CI_sim11_phi10[1,], bootstrap_CI_sim11_phi11[1,],
+                                             bootstrap_CI_sim12_phi00[1,], bootstrap_CI_sim12_phi01[1,], bootstrap_CI_sim12_phi10[1,], bootstrap_CI_sim12_phi11[1,]),
+                                lower_bound = c(bootstrap_CI_sim9_phi00[3,], bootstrap_CI_sim9_phi01[3,], bootstrap_CI_sim9_phi10[3,], bootstrap_CI_sim9_phi11[3,],
+                                             bootstrap_CI_sim10_phi00[3,], bootstrap_CI_sim10_phi01[3,], bootstrap_CI_sim10_phi10[3,], bootstrap_CI_sim10_phi11[3,],
+                                             bootstrap_CI_sim11_phi00[3,], bootstrap_CI_sim11_phi01[3,], bootstrap_CI_sim11_phi10[3,], bootstrap_CI_sim11_phi11[3,],
+                                             bootstrap_CI_sim12_phi00[3,], bootstrap_CI_sim12_phi01[3,], bootstrap_CI_sim12_phi10[3,], bootstrap_CI_sim12_phi11[3,]),
+                                upper_bound = c(bootstrap_CI_sim9_phi00[2,], bootstrap_CI_sim9_phi01[2,], bootstrap_CI_sim9_phi10[2,], bootstrap_CI_sim9_phi11[2,],
+                                             bootstrap_CI_sim10_phi00[2,], bootstrap_CI_sim10_phi01[2,], bootstrap_CI_sim10_phi10[2,], bootstrap_CI_sim10_phi11[2,],
+                                             bootstrap_CI_sim11_phi00[2,], bootstrap_CI_sim11_phi01[2,], bootstrap_CI_sim11_phi10[2,], bootstrap_CI_sim11_phi11[2,],
+                                             bootstrap_CI_sim12_phi00[2,], bootstrap_CI_sim12_phi01[2,], bootstrap_CI_sim12_phi10[2,], bootstrap_CI_sim12_phi11[2,]),
+                                true_prob = rep(c(true_phi00, true_phi01, true_phi10, true_phi11), times = 4))
+```
+
+```{r}
+ggplot(data = bootstrap_CI_pairs, mapping = aes(color = q_value)) +
+  #geom_point(mapping = aes(x = site, y = true_prob)) +
+  geom_point(mapping = aes(x = site, y = mean_est)) +
+  geom_errorbar(mapping = aes(x = site, y = mean_est, ymin = lower_bound, ymax = upper_bound)) +
+  theme_bw() 
+  #scale_color_manual(values = c("red", "blue", "green", "purple", "pink"),
+                    # labels = c("True", "q=0.005", "q=0.01", "q=0.05", "q=0.1"),
+                     #name = "q-value or true")
+```
+
+```{r}
+write_xlsx(bootstrap_CI_pairs, path = "/Users/rhode22g/Documents/bootstrap_CI_pairs.xlsx")
+write_xlsx(bootstrap_CI_three, path = "/Users/rhode22g/Documents/bootstrap_CI_three.xlsx")
+write_xlsx(bootstrap_CI_four, path = "/Users/rhode22g/Documents/bootstrap_CI_four.xlsx")
+```
+
