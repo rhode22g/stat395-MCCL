@@ -1758,3 +1758,279 @@ write_xlsx(bootstrap_CI_three, path = "/Users/rhode22g/Documents/bootstrap_CI_th
 write_xlsx(bootstrap_CI_four, path = "/Users/rhode22g/Documents/bootstrap_CI_four.xlsx")
 ```
 
+### Pairwise
+
+```{r}
+bootstrap_CI_sim1_2 <- rbind(bootstrap_CI_sim1, true_phi_sim1, seq(1:19))
+bootstrap_CI_sim1_2 <- t(bootstrap_CI_sim1_2)
+colnames(bootstrap_CI_sim1_2) <- c("mean", "upper", "lower", "true", "site")
+bootstrap_CI_sim1_2 <- as.data.frame(bootstrap_CI_sim1_2)
+
+bootstrap_sim1_plot <- ggplot(data = bootstrap_CI_sim1_2) +
+  geom_point(mapping = aes(x = site, y = true, color = "true")) +
+  geom_point(mapping = aes(x = site, y = mean, color = "mean")) +
+  geom_errorbar(mapping = aes(x = site, y = mean, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  scale_color_manual(name = "Data Type", labels = c("Average Est.", "True Prob."), values = c("red", "blue")) +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=1, q=0.005") +
+  xlab("Site") +
+  ylab("Probability")
+bootstrap_sim1_plot
+```
+
+```{r}
+bootstrap_CI_sim2_2 <- rbind(bootstrap_CI_sim2, true_phi_sim1, seq(1:19))
+bootstrap_CI_sim2_2 <- t(bootstrap_CI_sim2_2)
+colnames(bootstrap_CI_sim2_2) <- c("mean", "upper", "lower", "true", "site")
+bootstrap_CI_sim2_2 <- as.data.frame(bootstrap_CI_sim2_2)
+
+bootstrap_sim2_plot <- ggplot(data = bootstrap_CI_sim2_2) +
+  geom_point(mapping = aes(x = site, y = true, color = "true")) +
+  geom_point(mapping = aes(x = site, y = mean, color = "mean")) +
+  geom_errorbar(mapping = aes(x = site, y = mean, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  scale_color_manual(name = "Data Type", labels = c("Average Est.", "True Prob."), values = c("red", "blue")) +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=1, q=0.01") +
+  xlab("Site") +
+  ylab("Probability")
+bootstrap_sim2_plot
+```
+
+```{r}
+bootstrap_CI_sim3_2 <- rbind(bootstrap_CI_sim3, true_phi_sim1, seq(1:19))
+bootstrap_CI_sim3_2 <- t(bootstrap_CI_sim3_2)
+colnames(bootstrap_CI_sim3_2) <- c("mean", "upper", "lower", "true", "site")
+bootstrap_CI_sim3_2 <- as.data.frame(bootstrap_CI_sim3_2)
+
+bootstrap_sim3_plot <- ggplot(data = bootstrap_CI_sim3_2) +
+  geom_point(mapping = aes(x = site, y = true, color = "true")) +
+  geom_point(mapping = aes(x = site, y = mean, color = "mean")) +
+  geom_errorbar(mapping = aes(x = site, y = mean, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  scale_color_manual(name = "Data Type", labels = c("Average Est.", "True Prob."), values = c("red", "blue")) +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=1, q=0.05") +
+  xlab("Site") +
+  ylab("Probability")
+bootstrap_sim3_plot
+```
+
+```{r}
+bootstrap_CI_sim4_2 <- rbind(bootstrap_CI_sim4, true_phi_sim1, seq(1:19))
+bootstrap_CI_sim4_2 <- t(bootstrap_CI_sim4_2)
+colnames(bootstrap_CI_sim4_2) <- c("mean", "upper", "lower", "true", "site")
+bootstrap_CI_sim4_2 <- as.data.frame(bootstrap_CI_sim4_2)
+
+bootstrap_sim4_plot <- ggplot(data = bootstrap_CI_sim4_2) +
+  geom_point(mapping = aes(x = site, y = true, color = "true")) +
+  geom_point(mapping = aes(x = site, y = mean, color = "mean")) +
+  geom_errorbar(mapping = aes(x = site, y = mean, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  scale_color_manual(name = "Data Type", labels = c("Average Est.", "True Prob."), values = c("red", "blue")) +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=1, q=0.1") +
+  xlab("Site") +
+  ylab("Probability")
+bootstrap_sim4_plot
+```
+
+
+```{r}
+bootstrap_pairs_v2 <- data.frame(Data = c(rep("q=0.005", times = 19), rep("q=0.01", times = 19), rep("q=0.05", times = 19), rep("q=0.1", times = 19), rep("True", times = 19)),
+                                 site = rep(seq(1:19), times = 5),
+                                 probability = c(bootstrap_CI_sim1[1,], bootstrap_CI_sim2[1,], bootstrap_CI_sim3[1,], bootstrap_CI_sim4[1,], true_phi_sim1),
+                                 lower = c(bootstrap_CI_sim1[3,], bootstrap_CI_sim2[3,], bootstrap_CI_sim3[3,], bootstrap_CI_sim4[3,], rep(NA, times = 19)),
+                                 upper = c(bootstrap_CI_sim1[2,], bootstrap_CI_sim2[2,], bootstrap_CI_sim3[2,], bootstrap_CI_sim4[2,], rep(NA, times = 19)))
+
+combined_pairs_CI_plot <- ggplot(data = bootstrap_pairs_v2, mapping = aes(color = Data)) +
+  geom_point(mapping = aes(x=site, y = probability)) +
+  geom_errorbar(mapping = aes(x = site, y = probability, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=1") +
+  xlab("Site") +
+  ylab("Probability") 
+combined_pairs_CI_plot
+```
+```{r}
+ggplot(data = bootstrap_pairs_v2) +
+  geom_point(mapping = aes(x = site, y =probability)) +
+  facet_wrap(~sim, ncol = 2)
+```
+### Threewise
+
+```{r}
+bootstrap_CI_sim5_2_phi0 <- rbind(bootstrap_CI_sim5_phi0, true_phi0_sim2, seq(1:18))
+bootstrap_CI_sim5_2_phi0 <- t(bootstrap_CI_sim5_2_phi0)
+colnames(bootstrap_CI_sim5_2_phi0) <- c("mean", "upper", "lower", "true", "site")
+bootstrap_CI_sim5_2_phi0 <- as.data.frame(bootstrap_CI_sim5_2_phi0)
+
+bootstrap_sim5_phi0_plot <- ggplot(data = bootstrap_CI_sim5_2_phi0) +
+  geom_point(mapping = aes(x = site, y = true, color = "true")) +
+  geom_point(mapping = aes(x = site, y = mean, color = "mean")) +
+  geom_errorbar(mapping = aes(x = site, y = mean, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  scale_color_manual(name = "Data Type", labels = c("Average Est.", "True Prob."), values = c("red", "blue")) +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=2, q=0.005", subtitle = expression(phi[s](0))) +
+  xlab("Site") +
+  ylab("Probability")
+bootstrap_sim5_phi0_plot
+```
+
+```{r}
+bootstrap_CI_sim5_2_phi1 <- rbind(bootstrap_CI_sim5_phi1, true_phi1_sim2, seq(1:18))
+bootstrap_CI_sim5_2_phi1 <- t(bootstrap_CI_sim5_2_phi1)
+colnames(bootstrap_CI_sim5_2_phi1) <- c("mean", "upper", "lower", "true", "site")
+bootstrap_CI_sim5_2_phi1 <- as.data.frame(bootstrap_CI_sim5_2_phi1)
+
+bootstrap_sim5_phi1_plot <- ggplot(data = bootstrap_CI_sim5_2_phi1) +
+  geom_point(mapping = aes(x = site, y = true, color = "true")) +
+  geom_point(mapping = aes(x = site, y = mean, color = "mean")) +
+  geom_errorbar(mapping = aes(x = site, y = mean, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  scale_color_manual(name = "Data Type", labels = c("Average Est.", "True Prob."), values = c("red", "blue")) +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=2, q=0.005", subtitle = expression(phi[s](1))) +
+  xlab("Site") +
+  ylab("Probability")
+bootstrap_sim5_phi1_plot
+```
+
+
+```{r}
+bootstrap_CI_sim6_2_phi0 <- rbind(bootstrap_CI_sim6_phi0, true_phi0_sim2, seq(1:18))
+bootstrap_CI_sim6_2_phi0 <- t(bootstrap_CI_sim6_2_phi0)
+colnames(bootstrap_CI_sim6_2_phi0) <- c("mean", "upper", "lower", "true", "site")
+bootstrap_CI_sim6_2_phi0 <- as.data.frame(bootstrap_CI_sim6_2_phi0)
+
+bootstrap_sim6_phi0_plot <- ggplot(data = bootstrap_CI_sim6_2_phi0) +
+  geom_point(mapping = aes(x = site, y = true, color = "true")) +
+  geom_point(mapping = aes(x = site, y = mean, color = "mean")) +
+  geom_errorbar(mapping = aes(x = site, y = mean, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  scale_color_manual(name = "Data Type", labels = c("Average Est.", "True Prob."), values = c("red", "blue")) +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=2, q=0.01", subtitle = expression(phi[s](0))) +
+  xlab("Site") +
+  ylab("Probability")
+bootstrap_sim6_phi0_plot
+```
+
+```{r}
+bootstrap_CI_sim6_2_phi1 <- rbind(bootstrap_CI_sim6_phi1, true_phi1_sim2, seq(1:18))
+bootstrap_CI_sim6_2_phi1 <- t(bootstrap_CI_sim6_2_phi1)
+colnames(bootstrap_CI_sim6_2_phi1) <- c("mean", "upper", "lower", "true", "site")
+bootstrap_CI_sim6_2_phi1 <- as.data.frame(bootstrap_CI_sim6_2_phi1)
+
+bootstrap_sim6_phi1_plot <- ggplot(data = bootstrap_CI_sim6_2_phi1) +
+  geom_point(mapping = aes(x = site, y = true, color = "true")) +
+  geom_point(mapping = aes(x = site, y = mean, color = "mean")) +
+  geom_errorbar(mapping = aes(x = site, y = mean, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  scale_color_manual(name = "Data Type", labels = c("Average Est.", "True Prob."), values = c("red", "blue")) +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=2, q=0.01", subtitle = expression(phi[s](1))) +
+  xlab("Site") +
+  ylab("Probability")
+bootstrap_sim6_phi1_plot
+```
+
+```{r}
+bootstrap_CI_sim7_2_phi0 <- rbind(bootstrap_CI_sim7_phi0, true_phi0_sim2, seq(1:18))
+bootstrap_CI_sim7_2_phi0 <- t(bootstrap_CI_sim7_2_phi0)
+colnames(bootstrap_CI_sim7_2_phi0) <- c("mean", "upper", "lower", "true", "site")
+bootstrap_CI_sim7_2_phi0 <- as.data.frame(bootstrap_CI_sim7_2_phi0)
+
+bootstrap_sim7_phi0_plot <- ggplot(data = bootstrap_CI_sim7_2_phi0) +
+  geom_point(mapping = aes(x = site, y = true, color = "true")) +
+  geom_point(mapping = aes(x = site, y = mean, color = "mean")) +
+  geom_errorbar(mapping = aes(x = site, y = mean, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  scale_color_manual(name = "Data Type", labels = c("Average Est.", "True Prob."), values = c("red", "blue")) +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=2, q=0.05", subtitle = expression(phi[s](0))) +
+  xlab("Site") +
+  ylab("Probability")
+bootstrap_sim7_phi0_plot
+```
+
+```{r}
+bootstrap_CI_sim7_2_phi1 <- rbind(bootstrap_CI_sim7_phi1, true_phi1_sim2, seq(1:18))
+bootstrap_CI_sim7_2_phi1 <- t(bootstrap_CI_sim7_2_phi1)
+colnames(bootstrap_CI_sim7_2_phi1) <- c("mean", "upper", "lower", "true", "site")
+bootstrap_CI_sim7_2_phi1 <- as.data.frame(bootstrap_CI_sim7_2_phi1)
+
+bootstrap_sim7_phi1_plot <- ggplot(data = bootstrap_CI_sim7_2_phi1) +
+  geom_point(mapping = aes(x = site, y = true, color = "true")) +
+  geom_point(mapping = aes(x = site, y = mean, color = "mean")) +
+  geom_errorbar(mapping = aes(x = site, y = mean, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  scale_color_manual(name = "Data Type", labels = c("Average Est.", "True Prob."), values = c("red", "blue")) +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=2, q=0.05", subtitle = expression(phi[s](1))) +
+  xlab("Site") +
+  ylab("Probability")
+bootstrap_sim7_phi1_plot
+```
+
+```{r}
+bootstrap_CI_sim8_2_phi0 <- rbind(bootstrap_CI_sim8_phi0, true_phi0_sim2, seq(1:18))
+bootstrap_CI_sim8_2_phi0 <- t(bootstrap_CI_sim8_2_phi0)
+colnames(bootstrap_CI_sim8_2_phi0) <- c("mean", "upper", "lower", "true", "site")
+bootstrap_CI_sim8_2_phi0 <- as.data.frame(bootstrap_CI_sim8_2_phi0)
+
+bootstrap_sim8_phi0_plot <- ggplot(data = bootstrap_CI_sim8_2_phi0) +
+  geom_point(mapping = aes(x = site, y = true, color = "true")) +
+  geom_point(mapping = aes(x = site, y = mean, color = "mean")) +
+  geom_errorbar(mapping = aes(x = site, y = mean, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  scale_color_manual(name = "Data Type", labels = c("Average Est.", "True Prob."), values = c("red", "blue")) +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=2, q=0.1", subtitle = expression(phi[s](0))) +
+  xlab("Site") +
+  ylab("Probability")
+bootstrap_sim8_phi0_plot
+```
+
+```{r}
+bootstrap_CI_sim8_2_phi1 <- rbind(bootstrap_CI_sim8_phi1, true_phi1_sim2, seq(1:18))
+bootstrap_CI_sim8_2_phi1 <- t(bootstrap_CI_sim8_2_phi1)
+colnames(bootstrap_CI_sim8_2_phi1) <- c("mean", "upper", "lower", "true", "site")
+bootstrap_CI_sim8_2_phi1 <- as.data.frame(bootstrap_CI_sim8_2_phi1)
+
+bootstrap_sim8_phi1_plot <- ggplot(data = bootstrap_CI_sim8_2_phi1) +
+  geom_point(mapping = aes(x = site, y = true, color = "true")) +
+  geom_point(mapping = aes(x = site, y = mean, color = "mean")) +
+  geom_errorbar(mapping = aes(x = site, y = mean, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  scale_color_manual(name = "Data Type", labels = c("Average Est.", "True Prob."), values = c("red", "blue")) +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=2, q=0.1", subtitle = expression(phi[s](1))) +
+  xlab("Site") +
+  ylab("Probability")
+bootstrap_sim8_phi1_plot
+```
+
+```{r}
+bootstrap_threephi0_v2 <- data.frame(Data = c(rep("q=0.005", times = 18), rep("q=0.01", times = 18), rep("q=0.05", times = 18), rep("q=0.1", times = 18), rep("True", times = 18)),
+                                 site = rep(seq(1:18), times = 5),
+                                 probability = c(bootstrap_CI_sim5_phi0[1,], bootstrap_CI_sim6_phi0[1,], bootstrap_CI_sim7_phi0[1,], bootstrap_CI_sim8_phi0[1,], true_phi0_sim2),
+                                 lower = c(bootstrap_CI_sim5_phi0[3,], bootstrap_CI_sim6_phi0[3,], bootstrap_CI_sim7_phi0[3,], bootstrap_CI_sim8_phi0[3,], rep(NA, times = 18)),
+                                 upper = c(bootstrap_CI_sim5_phi0[2,], bootstrap_CI_sim6_phi0[2,], bootstrap_CI_sim7_phi0[2,], bootstrap_CI_sim8_phi0[2,], rep(NA, times = 18)))
+
+combined_threephi0_CI_plot <- ggplot(data = bootstrap_threephi0_v2, mapping = aes(color = Data)) +
+  geom_point(mapping = aes(x=site, y = probability)) +
+  geom_errorbar(mapping = aes(x = site, y = probability, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=2", subtitle = expression(phi[s](0))) +
+  xlab("Site") +
+  ylab("Probability") 
+combined_threephi0_CI_plot
+```
+
+```{r}
+bootstrap_threephi1_v2 <- data.frame(Data = c(rep("q=0.005", times = 18), rep("q=0.01", times = 18), rep("q=0.05", times = 18), rep("q=0.1", times = 18), rep("True", times = 18)),
+                                 site = rep(seq(1:18), times = 5),
+                                 probability = c(bootstrap_CI_sim5_phi1[1,], bootstrap_CI_sim6_phi1[1,], bootstrap_CI_sim7_phi1[1,], bootstrap_CI_sim8_phi1[1,], true_phi1_sim2),
+                                 lower = c(bootstrap_CI_sim5_phi1[3,], bootstrap_CI_sim6_phi1[3,], bootstrap_CI_sim7_phi1[3,], bootstrap_CI_sim8_phi1[3,], rep(NA, times = 18)),
+                                 upper = c(bootstrap_CI_sim5_phi1[2,], bootstrap_CI_sim6_phi1[2,], bootstrap_CI_sim7_phi1[2,], bootstrap_CI_sim8_phi1[2,], rep(NA, times = 18)))
+
+combined_threephi1_CI_plot <- ggplot(data = bootstrap_threephi1_v2, mapping = aes(color = Data)) +
+  geom_point(mapping = aes(x=site, y = probability)) +
+  geom_errorbar(mapping = aes(x = site, y = probability, ymin = lower, ymax = upper)) +
+  theme_bw() +
+  ggtitle("True Probability and 95% Bootstrap CI with Average Estimates: m=2", subtitle = expression(phi[s](1))) +
+  xlab("Site") +
+  ylab("Probability") 
+combined_threephi1_CI_plot
+```
